@@ -1,25 +1,29 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "RainBorrow",
+    "slug": "rainborrow",
+    "scheme": "rainborrow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/rainborrow-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rainborrow.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#245B49",
+        "foregroundImage": "./assets/rainborrow-icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.rainborrow.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/rainborrow-icon.png",
+      "bundler": "metro",
+      "name": "RainBorrow"
+    },
+    "plugins": ["expo-router", "expo-font", ["expo-location", {"locationWhenInUsePermission": "Show your location to help you find nearby umbrella stations."}], ["expo-camera", {"cameraPermission": "Scan a station QR code to borrow an umbrella.", "recordAudioAndroid": false}]]
   }
 }

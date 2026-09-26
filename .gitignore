@@ -39,3 +39,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Private local configuration
+.env
+.env.*
+!.env.example
+
+# Browser test output
+playwright-report/
+test-results/
