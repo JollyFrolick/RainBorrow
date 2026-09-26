@@ -7,7 +7,7 @@ import { colors as c, fonts as f } from '../theme';
 
 const steps: { number: string; icon: IconName; title: string; text: string }[] = [
   { number: '01', icon: 'map-pin', title: 'Find your shelter.', text: 'Open the map, choose Borrow, and find a station with umbrellas available. Check its opening hours and get walking directions.' },
-  { number: '02', icon: 'maximize', title: 'Scan. Borrow. Go.', text: 'Review the price, then scan the station QR or enter its code. Your rental begins when the station confirms you’ve taken the umbrella.' },
+  { number: '02', icon: 'maximize', title: 'Scan. Borrow. Go.', text: 'Tap Scan to rent, scan the station QR or enter its code, then review the price. Your rental begins when the station confirms you’ve taken the umbrella.' },
   { number: '03', icon: 'repeat', title: 'Pass it on.', text: 'Switch to Return to find an available slot. Insert the umbrella, wait for lock confirmation, and get your receipt. Any compatible station works.' },
 ];
 const faqs = [

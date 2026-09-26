@@ -1,70 +1,91 @@
 import React, { useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
-import { Shell } from '../components/Shell';
-import { Button, Icon, IconButton, Pill, s, T, UmbrellaArt } from '../components/ui';
+import { Button, Icon, IconButton, Pill, s, T } from '../components/ui';
 import StationMap from '../components/StationMap';
 import { useApp, DEMO_CENTER } from '../context/AppContext';
 import { colors as c, fonts as f } from '../theme';
 import { canUseStation, distanceMeters, formatDistance, isOpen, stationCount } from '../lib/rental';
 import type { Station } from '../data/stations';
 
-export default function Explore() {
-  const app = useApp(); const { width } = useWindowDimensions(); const mobile = width < 850;
-  const [query, setQuery] = useState(''); const [selectedId, setSelected] = useState<string | null>('RB-001'); const [saved, setSaved] = useState(false); const [centerRequest, setCenterRequest] = useState(0);
+export default function MapScreen() {
+  const app = useApp(); const { width, height } = useWindowDimensions(); const mobile = width < 760;
+  const [query, setQuery] = useState(''); const [selectedId, setSelected] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false); const [listOpen, setListOpen] = useState(false); const [centerRequest, setCenterRequest] = useState(0);
   const [directionsError, setDirectionsError] = useState('');
   const stations = useMemo(() => app.stations.filter(station => (!saved || app.favorites.includes(station.id)) && `${station.name} ${station.district} ${station.address} ${station.id} Hong Kong`.toLowerCase().includes(query.toLowerCase().trim())).sort((a, b) => Number(canUseStation(b, app.mode)) - Number(canUseStation(a, app.mode)) || distanceMeters(app.location || DEMO_CENTER, a) - distanceMeters(app.location || DEMO_CENTER, b)), [app.stations, app.favorites, app.location, app.mode, saved, query]);
-  const selected = stations.find(s => s.id === selectedId) || stations[0];
-  const available = stations.filter(s => canUseStation(s, app.mode)).length;
-  async function locate() { await app.getLocation(); setCenterRequest(n => n + 1); }
-  function choose(station: Station) { setSelected(station.id); setDirectionsError(''); }
-  async function directions() { if (!selected) return; try { await Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}&travelmode=walking`); } catch { setDirectionsError('Directions could not open. Try your maps app with the address above.'); } }
-  const controls = <View style={{ gap: 14 }}>
-    <View style={styles.search}><Icon name="search" size={18} color={c.muted} /><TextInput accessibilityLabel="Search stations or areas" value={query} onChangeText={setQuery} placeholder="Search a station or neighbourhood" placeholderTextColor={c.muted} style={{ flex: 1, fontFamily: f.regular, color: c.ink, fontSize: 13, paddingVertical: 13, minWidth: 0 }} />{query ? <Pressable accessibilityLabel="Clear search" accessibilityRole="button" onPress={() => setQuery('')}><Icon name="x" size={17} /></Pressable> : null}</View>
-    <View style={styles.segment}>{(['borrow', 'return'] as const).map(mode => <Pressable key={mode} accessibilityRole="tab" accessibilityState={{ selected: app.mode === mode }} onPress={() => app.setMode(mode)} style={[styles.segmentItem, app.mode === mode && styles.segmentActive]}><Icon name={mode === 'borrow' ? 'umbrella' : 'corner-down-left'} size={16} color={app.mode === mode ? '#fff' : c.muted} /><T style={{ fontFamily: f.semibold, fontSize: 13, color: app.mode === mode ? '#fff' : c.muted }}>{mode === 'borrow' ? 'Borrow' : 'Return'}</T></Pressable>)}</View>
-  </View>;
-  const stationList = <View style={{ gap: 10 }}>
-    <View style={[s.between, { marginTop: 6, marginBottom: 4 }]}><View><T style={{ fontFamily: f.bold, fontSize: 15 }}>{saved ? 'Saved stations' : 'Stations nearby'} <T style={{ color: c.muted, fontSize: 13 }}>({stations.length})</T></T><T style={{ fontSize: 11, color: c.muted, marginTop: 4 }}>{app.location ? 'Sorted from your location' : 'Around Central · demo area'}</T></View><Pressable accessibilityRole="button" accessibilityLabel={saved ? 'Show all stations' : 'Show saved stations'} onPress={() => setSaved(!saved)} style={[styles.filter, saved && { backgroundColor: c.sage }]}><Icon name="bookmark" size={15} color={saved ? c.green : c.muted} /></Pressable></View>
-    {stations.length === 0 ? <View style={[s.card, { alignItems: 'center', gap: 12 }]}><Icon name="search" size={25} /><T style={{ fontFamily: f.semibold }}>No stations found</T><T style={[s.muted, { textAlign: 'center', fontSize: 12 }]}>{saved ? 'Save a station with the bookmark button, or view all stations.' : 'Try Central, Sheung Wan, or a station name.'}</T><Button secondary title="Show all stations" onPress={() => { setSaved(false); setQuery(''); }} /></View> : stations.map(station => <StationRow key={station.id} station={station} selected={selected?.id === station.id} onPress={() => choose(station)} />)}
-    <T style={{ color: c.muted, fontSize: 10, lineHeight: 16, paddingHorizontal: 2 }}>Fictional stations for exploring the app. Availability is simulated; locations are not operating rental points.</T>
-  </View>;
-  const map = <View style={styles.mapCard}>
-    <View style={[s.between, { paddingHorizontal: 19, paddingVertical: 15 }]}><View style={s.row}><View style={styles.smallDot} /><T style={{ fontFamily: f.semibold, fontSize: 12 }}>Central & Sheung Wan</T></View><T style={{ fontSize: 11, color: c.muted }}>{available} {app.mode === 'borrow' ? 'ready to borrow' : 'accepting returns'}</T></View>
-    <View style={{ height: mobile ? 280 : 425 }}><StationMap stations={stations} selectedId={selected?.id || null} onSelect={setSelected} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} />
-      <View style={[styles.mapNote, { pointerEvents: 'none' }]}><Icon name="map-pin" size={13} color={c.green} /><T style={{ fontSize: 10, fontFamily: f.medium }}>Explore the Hong Kong demo</T></View>
-    </View>
-    {selected ? <View style={{ padding: mobile ? 18 : 24, gap: 14 }}>
-      <View style={s.between}><View style={[s.row, { flex: 1 }]}><View style={styles.stationIcon}><Icon name={selected.category === 'MTR' ? 'navigation' : 'map-pin'} color={c.green} /></View><View style={{ flex: 1 }}><T style={{ fontSize: 18, fontFamily: f.bold }}>{selected.name}</T><T style={{ fontSize: 11, color: c.muted, marginTop: 4 }}>{selected.landmark}</T></View></View><IconButton icon="bookmark" label={app.favorites.includes(selected.id) ? 'Unsave station' : 'Save station'} onPress={() => app.toggleFavorite(selected.id)} style={app.favorites.includes(selected.id) ? { backgroundColor: c.mint } : undefined} /></View>
-      <View style={[s.row, { flexWrap: 'wrap', gap: 14 }]}><View style={s.row}><Icon name="umbrella" size={14} /><T style={{ fontSize: 12, fontFamily: f.semibold }}>{selected.available} umbrellas</T></View><View style={s.row}><Icon name="grid" size={14} color={c.muted} /><T style={{ fontSize: 12, color: c.muted }}>{selected.capacity - selected.available} return slots</T></View><View style={s.row}><Icon name="clock" size={14} color={c.muted} /><T style={{ fontSize: 12, color: c.muted }}>{selected.hours}</T></View></View>
-      <View style={[s.row, { gap: 10 }]}><Button title={app.mode === 'borrow' ? app.rental ? 'View active rental' : `Borrow here · HK$5/hr` : app.rental ? 'Return here' : 'Borrow an umbrella first'} icon={app.mode === 'borrow' ? 'maximize' : 'corner-down-left'} style={{ flex: 1 }} disabled={!canUseStation(selected, app.mode) || (app.mode === 'return' && !app.rental)} onPress={() => { if (app.mode === 'borrow' && app.rental) router.replace('/rentals'); else app.setSheet({ kind: app.mode, stationId: selected.id }); }} /><IconButton icon="navigation" label="Walking directions" style={{ height: 48, width: 48 }} onPress={directions} /></View>
-      {directionsError ? <T style={{ color: c.red, fontSize: 12 }}>{directionsError}</T> : null}
-    </View> : <View style={{ padding: 25 }}><T style={s.muted}>Change your search to see station details.</T></View>}
-  </View>;
-  return <Shell>
-    <View style={[s.between, { marginBottom: mobile ? 22 : 28, alignItems: 'flex-end' }]}><View style={{ flex: 1 }}><T style={[s.label, { marginBottom: 9 }]}>GOOD DAYS, RAIN OR SHINE</T><T style={[s.title, mobile && { fontSize: 34, lineHeight: 40 }]}>Go places. Stay dry.</T><T style={{ color: c.muted, marginTop: 9, fontSize: mobile ? 13 : 14 }}>An umbrella when you need it. A little less to carry.</T></View>{!mobile && <View style={[s.row, { paddingBottom: 8, gap: 8 }]}><Icon name="map-pin" size={17} /><T style={{ fontFamily: f.medium, fontSize: 13 }}>Hong Kong</T><Pill>City preview</Pill></View>}</View>
-    {app.rental && <Pressable accessibilityRole="link" onPress={() => router.replace('/rentals')} style={styles.activeBanner}><View style={s.row}><Icon name="umbrella" color={c.green} /><View><T style={{ fontFamily: f.bold }}>You’re covered. Your rental is active.</T><T style={{ color: c.muted, fontSize: 12, marginTop: 3 }}>View your timer or find a return station.</T></View></View><Icon name="arrow-right" /></Pressable>}
-    {(app.locationError || app.locationLoading) && <View style={{ padding: 12, backgroundColor: c.sage, borderRadius: 12, marginBottom: 16 }}><T style={{ fontSize: 12, lineHeight: 18 }}>{app.locationLoading ? 'Finding your current location…' : app.locationError}</T></View>}
-    <View style={{ flexDirection: mobile ? 'column' : 'row', gap: mobile ? 18 : 24 }}>
-      {!mobile ? <View style={{ width: width > 1200 ? 350 : 310, gap: 17 }}>{controls}{stationList}</View> : controls}
-      <View style={{ flex: mobile ? undefined : 1, minWidth: 0, gap: 18 }}>{map}
-        {!mobile && <View style={styles.promo}><View style={{ flex: 1, gap: 6 }}><T style={{ color: c.lime, fontSize: 10, fontFamily: f.semibold, letterSpacing: 1.5 }}>LESS TO CARRY. MORE TO SHARE.</T><T style={{ fontFamily: f.display, fontSize: 25, color: '#fff' }}>A small umbrella. A bigger idea.</T><T style={{ color: '#BCCFC1', fontSize: 12, lineHeight: 19 }}>Borrow for the moment. Return for the next person.</T></View><UmbrellaArt width={120} height={110} dark /></View>}
+  const selected = stations.find(station => station.id === selectedId);
+  async function locate() { setListOpen(false); setSelected(null); await app.getLocation(); setCenterRequest(n => n + 1); }
+  function choose(id: string) { setSelected(id); setDirectionsError(''); setListOpen(false); Keyboard.dismiss(); }
+  async function directions() {
+    if (!selected) return;
+    try { await Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}&travelmode=walking`); }
+    catch { setDirectionsError('Directions could not open. Try your maps app with the address above.'); }
+  }
+  return <View style={styles.root}>
+    <StationMap stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={mobile ? 145 : 22} bottomInset={mobile && selected ? 285 : 40} />
+    <View pointerEvents="box-none" style={[styles.top, { right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
+      <View style={styles.search}>
+        <View style={styles.logo}><Icon name="umbrella" color="white" size={21} /></View>
+        <TextInput accessibilityLabel="Search stations or areas" value={query} onFocus={() => setListOpen(true)} onChangeText={value => { setQuery(value); setListOpen(true); }} placeholder="Find an umbrella station" placeholderTextColor={c.muted} style={styles.searchInput} />
+        {query ? <IconButton icon="x" label="Clear search" onPress={() => setQuery('')} style={styles.smallButton} /> : <Icon name="search" size={19} color={c.muted} />}
       </View>
-      {mobile && stationList}
+      <View style={styles.tools}>
+        <View style={styles.segment}>{(['borrow', 'return'] as const).map(mode => <Pressable key={mode} accessibilityRole="tab" accessibilityLabel={mode === 'borrow' ? 'Borrow' : 'Return'} accessibilityState={{ selected: app.mode === mode }} onPress={() => app.setMode(mode)} style={[styles.segmentItem, app.mode === mode && styles.segmentActive]}><Icon name={mode === 'borrow' ? 'umbrella' : 'corner-down-left'} size={14} color={app.mode === mode ? '#fff' : c.green} /><T style={{ fontFamily: f.semibold, fontSize: 12, color: app.mode === mode ? '#fff' : c.green }}>{mode === 'borrow' ? 'Borrow' : 'Return'}</T></Pressable>)}</View>
+        <Pressable accessibilityRole="button" accessibilityLabel={listOpen ? 'Hide station list' : 'Show station list'} accessibilityState={{ expanded: listOpen }} onPress={() => { setListOpen(!listOpen); Keyboard.dismiss(); }} style={styles.listButton}><Icon name={listOpen ? 'x' : 'list'} size={16} /><T style={{ fontFamily: f.semibold, fontSize: 12 }}>Stations</T></Pressable>
+      </View>
+      {app.rental && !listOpen && <Pressable accessibilityRole="button" accessibilityLabel="View active rental" onPress={() => router.replace('/rentals')} style={styles.activeBanner}><Icon name="umbrella" size={17} /><T style={{ flex: 1, fontSize: 12, fontFamily: f.semibold }}>Rental active · View or return</T><Icon name="arrow-right" size={16} /></Pressable>}
+      {(app.locationError || app.locationLoading) && <View style={styles.notice}><T accessibilityRole="alert" style={{ fontSize: 12, lineHeight: 18 }}>{app.locationLoading ? 'Finding your current location…' : app.locationError}</T></View>}
+      {listOpen && <View style={[styles.stationList, { maxHeight: Math.max(160, height - 300) }]}>
+        <View style={[s.between, { padding: 16 }]}><View><T style={{ fontFamily: f.bold }}>{saved ? 'Saved stations' : 'Nearby stations'} ({stations.length})</T><T style={{ fontSize: 10, color: c.muted, marginTop: 4 }}>{app.location ? 'From your location' : 'Around Central · demo area'}</T></View><IconButton icon="bookmark" label={saved ? 'Show all stations' : 'Show saved stations'} onPress={() => setSaved(!saved)} style={saved ? { backgroundColor: c.mint } : undefined} /></View>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 12, gap: 7 }}>
+          {stations.length ? stations.map(station => <StationRow key={station.id} station={station} onPress={() => choose(station.id)} />) : <View style={{ padding: 18, gap: 12 }}><T style={{ fontFamily: f.semibold }}>No stations found</T><T style={{ color: c.muted, fontSize: 12 }}>Try another area or view all demo stations.</T><Button secondary title="Show all stations" onPress={() => { setQuery(''); setSaved(false); }} /></View>}
+        </ScrollView>
+      </View>}
     </View>
-    <View style={[styles.benefits, mobile && { flexDirection: 'column', gap: 19, padding: 22 }]}>{[{ icon: 'credit-card' as const, title: 'Small price. Big relief.', text: 'HK$5/hour · capped at HK$30/day' }, { icon: 'repeat' as const, title: 'Borrow here. Return there.', text: 'Any available slot in our network' }, { icon: 'feather' as const, title: 'Made for sharing.', text: 'One umbrella. Many rainy-day adventures.' }].map(item => <View key={item.title} style={[s.row, { flex: 1, gap: 14 }]}><View style={styles.benefitIcon}><Icon name={item.icon} color={c.green} /></View><View style={{ flex: 1 }}><T style={{ fontFamily: f.semibold, fontSize: 12 }}>{item.title}</T><T style={{ fontSize: 11, color: c.muted, marginTop: 4 }}>{item.text}</T></View></View>)}</View>
-  </Shell>;
+    {!listOpen && <View pointerEvents="box-none" style={[styles.bottom, { right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
+      {selected ? <View style={[styles.details, { maxHeight: Math.max(190, height - 265) }]}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 18, gap: 13 }}>
+          <View style={s.between}><View style={{ flex: 1, gap: 4 }}><T style={styles.eyebrow}>{selected.district} · {selected.id}</T><T style={{ fontSize: 21, fontFamily: f.bold }}>{selected.name}</T></View><IconButton icon="x" label="Close station details" onPress={() => setSelected(null)} style={styles.smallButton} /></View>
+          <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }}>{selected.landmark}</T>
+          <View style={[s.row, { flexWrap: 'wrap', gap: 12 }]}><Pill tone={canUseStation(selected, app.mode) ? 'green' : 'orange'}>{stationStatus(selected, app.mode)}</Pill><T style={{ fontSize: 11, color: c.muted }}>{selected.hours}</T></View>
+          <View style={s.row}><Button title={app.mode === 'return' ? app.rental ? 'Return here' : 'Rent an umbrella first' : app.rental ? 'View rental' : 'Rent here · HK$5/hr'} icon={app.mode === 'return' ? 'corner-down-left' : 'maximize'} style={{ flex: 1, paddingHorizontal: 12 }} disabled={!canUseStation(selected, app.mode) || (app.mode === 'return' && !app.rental)} onPress={() => { if (app.mode === 'return') app.setSheet({ kind: 'return', stationId: selected.id }); else if (app.rental) router.replace('/rentals'); else router.replace({ pathname: '/scan', params: { stationId: selected.id } }); }} /><IconButton icon="navigation" label="Walking directions" onPress={directions} /><IconButton icon="bookmark" label={app.favorites.includes(selected.id) ? 'Unsave station' : 'Save station'} onPress={() => app.toggleFavorite(selected.id)} style={app.favorites.includes(selected.id) ? { backgroundColor: c.mint } : undefined} /></View>
+          {directionsError ? <T style={{ color: c.red, fontSize: 12 }}>{directionsError}</T> : null}
+        </ScrollView>
+      </View> : <View pointerEvents="none" style={styles.mapHint}><Icon name="map-pin" size={16} /><T style={{ fontSize: 12, fontFamily: f.medium }}>Tap a station to {app.mode === 'borrow' ? 'find an umbrella' : 'find a return slot'}</T></View>}
+      <T pointerEvents="none" style={styles.demoNote}>Demo stations · No real rentals or charges</T>
+    </View>}
+  </View>;
 }
-function StationRow({ station, selected, onPress }: { station: Station; selected: boolean; onPress: () => void }) {
-  const { mode, location } = useApp(); const usable = canUseStation(station, mode); const count = stationCount(station, mode);
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Select ${station.name}`} onPress={onPress} style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [styles.stationRow, selected && { borderColor: '#749B77', backgroundColor: '#F0F5EB' }, hovered && !selected && { backgroundColor: '#F1F3ED' }]}>
-    <View style={s.between}><T style={{ fontFamily: f.semibold, fontSize: 14, flex: 1 }}>{station.name}</T><Icon name="arrow-up-right" size={16} color={selected ? c.green : '#A4B0A6'} /></View>
-    <T style={{ fontSize: 11, color: c.muted, marginTop: 5, marginBottom: 12 }}>{station.district} · {formatDistance(distanceMeters(location || DEMO_CENTER, station))}{!location ? ' from demo centre' : ' away'}</T>
-    <View style={s.between}><View style={[s.row, { gap: 6 }]}><View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: usable ? '#5C8858' : c.orange }} /><T style={{ fontSize: 11, color: usable ? c.green : c.orange, fontFamily: f.medium }}>{station.status === 'offline' ? 'Temporarily offline' : !isOpen(station) ? 'Closed now' : `${count} ${mode === 'borrow' ? 'umbrellas' : 'return slots'} available`}</T></View><T style={{ fontSize: 10, color: c.muted }}>{station.category}</T></View>
+function stationStatus(station: Station, mode: 'borrow' | 'return') {
+  return station.status === 'offline' ? 'Temporarily offline' : !isOpen(station) ? 'Closed now' : `${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'} available`;
+}
+function StationRow({ station, onPress }: { station: Station; onPress: () => void }) {
+  const { mode, location } = useApp();
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Select ${station.name}`} onPress={onPress} style={styles.stationRow}>
+    <View style={s.between}><T style={{ fontFamily: f.semibold, flex: 1 }}>{station.name}</T><Icon name="chevron-right" size={17} /></View>
+    <T style={{ fontSize: 11, color: c.muted, marginTop: 5 }}>{formatDistance(distanceMeters(location || DEMO_CENTER, station))}{location ? ' away' : ' from demo centre'} · {stationStatus(station, mode)}</T>
   </Pressable>;
 }
 const styles = StyleSheet.create({
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: 13, minHeight: 48 }, segment: { flexDirection: 'row', padding: 4, borderRadius: 13, backgroundColor: '#EAEEE5', gap: 4 }, segmentItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 40, borderRadius: 10, gap: 8 }, segmentActive: { backgroundColor: c.green },
-  filter: { height: 33, width: 33, borderRadius: 8, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center' }, stationRow: { padding: 16, borderWidth: 1, borderColor: c.line, borderRadius: 14, backgroundColor: c.paper },
-  mapCard: { borderWidth: 1, borderColor: c.line, borderRadius: 20, overflow: 'hidden', backgroundColor: c.paper }, smallDot: { height: 6, width: 6, borderRadius: 3, backgroundColor: '#789165' }, mapNote: { position: 'absolute', bottom: 13, left: 13, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: '#FFFFFFEB', borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }, stationIcon: { backgroundColor: c.sage, width: 42, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  promo: { borderRadius: 18, backgroundColor: c.greenDark, paddingVertical: 13, paddingLeft: 24, paddingRight: 14, flexDirection: 'row', alignItems: 'center', gap: 6, overflow: 'hidden' }, benefits: { marginTop: 26, flexDirection: 'row', padding: 24, borderWidth: 1, borderColor: c.line, borderRadius: 18, backgroundColor: '#F0F3EB', gap: 24 }, benefitIcon: { width: 40, height: 40, backgroundColor: '#E5EBDC', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, activeBanner: { marginBottom: 20, padding: 18, borderRadius: 14, backgroundColor: c.mint, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  root: { flex: 1, backgroundColor: '#E8EDE3' },
+  top: { position: 'absolute', top: 16, left: 14, gap: 10, zIndex: 10 },
+  search: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, backgroundColor: c.paper, borderRadius: 18, borderWidth: 1, borderColor: c.line, boxShadow: '0 4px 20px #15382c12' },
+  logo: { width: 35, height: 35, borderRadius: 12, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' },
+  searchInput: { flex: 1, minWidth: 0, fontFamily: f.medium, fontSize: 13, color: c.ink, paddingVertical: 17 },
+  smallButton: { width: 32, height: 32, borderWidth: 0, backgroundColor: 'transparent' },
+  tools: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  segment: { flex: 1, flexDirection: 'row', padding: 4, borderRadius: 14, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line },
+  segmentItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 34, borderRadius: 10, gap: 6 },
+  segmentActive: { backgroundColor: c.green },
+  listButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 44, paddingHorizontal: 14, backgroundColor: c.paper, borderRadius: 14, borderWidth: 1, borderColor: c.line },
+  stationList: { backgroundColor: c.paper, borderRadius: 18, borderWidth: 1, borderColor: c.line, overflow: 'hidden', boxShadow: '0 8px 24px #15382c18' },
+  stationRow: { padding: 14, backgroundColor: c.cream, borderRadius: 12 },
+  notice: { padding: 12, borderRadius: 12, backgroundColor: c.paper },
+  activeBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: c.mint, borderWidth: 1, borderColor: '#C5D5B8', borderRadius: 13, padding: 13 },
+  bottom: { position: 'absolute', bottom: 24, left: 14, gap: 8, zIndex: 5 },
+  details: { backgroundColor: c.paper, borderRadius: 20, borderWidth: 1, borderColor: c.line, boxShadow: '0 6px 28px #15382c20', overflow: 'hidden' },
+  eyebrow: { fontFamily: f.medium, fontSize: 10, color: c.muted, textTransform: 'uppercase', letterSpacing: .7 },
+  mapHint: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, padding: 13, borderRadius: 12, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line },
+  demoNote: { fontSize: 10, color: c.greenDark, alignSelf: 'flex-start', backgroundColor: '#FFFFFFE8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
 });

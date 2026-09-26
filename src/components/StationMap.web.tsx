@@ -9,14 +9,14 @@ import { StationMapProps } from './StationMap.types';
 import { IconButton, T } from './ui';
 import { colors as c } from '../theme';
 
-export default function StationMap({ stations, selectedId, onSelect, location, mode, centerRequest, onLocate, locating }: StationMapProps) {
+export default function StationMap({ stations, selectedId, onSelect, location, mode, centerRequest, onLocate, locating, controlsTop = 16, bottomInset = 40 }: StationMapProps) {
   const element = useRef<HTMLDivElement>(null); const map = useRef<L.Map | null>(null); const markers = useRef<L.LayerGroup | null>(null); const user = useRef<L.LayerGroup | null>(null);
   const select = useRef(onSelect);
   useEffect(() => { select.current = onSelect; }, [onSelect]);
   const [mapError, setMapError] = useState(false);
   useEffect(() => {
     if (!element.current) return;
-    const instance = L.map(element.current, { zoomControl: false, scrollWheelZoom: false, attributionControl: true }).setView([22.2835, 114.1565], 15);
+    const instance = L.map(element.current, { zoomControl: false, scrollWheelZoom: true, attributionControl: true }).setView([22.2835, 114.1565], 15);
     const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(instance);
     tiles.on('tileerror', () => setMapError(true)); tiles.on('tileload', () => setMapError(false));
     markers.current = L.layerGroup().addTo(instance); user.current = L.layerGroup().addTo(instance); map.current = instance;
@@ -39,7 +39,13 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
       marker.bindTooltip(station.name, { direction: 'top', offset: [0, -40], className: 'station-tooltip' });
     });
   }, [stations, selectedId, mode]);
-  useEffect(() => { const selected = stations.find(s => s.id === selectedId); if (selected) map.current?.panTo([selected.latitude, selected.longitude], { animate: true }); }, [selectedId, stations]);
+  useEffect(() => {
+    const selected = stations.find(s => s.id === selectedId); const instance = map.current;
+    if (!selected || !instance) return;
+    const point = instance.project([selected.latitude, selected.longitude], instance.getZoom());
+    const offset = Math.max(0, bottomInset - controlsTop) / 2;
+    instance.panTo(instance.unproject(point.add([0, offset]), instance.getZoom()), { animate: true });
+  }, [selectedId, stations, bottomInset, controlsTop]);
   useEffect(() => {
     user.current?.clearLayers(); if (!location || !user.current) return;
     L.circleMarker([location.latitude, location.longitude], { radius: 9, color: 'white', weight: 3, fillColor: '#5484D5', fillOpacity: 1 }).bindTooltip('Your location').addTo(user.current);
@@ -47,7 +53,7 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
   useEffect(() => { if (centerRequest && location) map.current?.setView([location.latitude, location.longitude], 15); }, [centerRequest, location]);
   return <View style={{ flex: 1, backgroundColor: '#E8EDE3', position: 'relative', minHeight: 280 }}>
     <div ref={element} aria-label="Map of demo umbrella stations in Hong Kong" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-    <View style={{ position: 'absolute', right: 16, top: 16, gap: 7 }}><IconButton icon="plus" label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { padding: [60, 60] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /></View>
+    <View style={{ position: 'absolute', right: 14, top: controlsTop, gap: 7 }}><IconButton icon="plus" label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { paddingTopLeft: [70, controlsTop], paddingBottomRight: [70, bottomInset] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /></View>
     {mapError && <View style={{ position: 'absolute', bottom: 24, left: 14, right: 65, backgroundColor: c.paper, borderRadius: 8, padding: 10 }}><T style={{ fontSize: 12 }}>Map tiles are unavailable. You can still choose a station from the list.</T></View>}
   </View>;
 }

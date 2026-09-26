@@ -11,12 +11,22 @@ npm run web
 
 For a phone, run `npm start` and open the project with a compatible Expo Go version. `npm run ios` and `npm run android` target installed simulators/emulators. Production Android builds require your own Google Maps API key and app restrictions, Set `GOOGLE_MAPS_ANDROID_API_KEY` in a local `.env` file; `app.config.ts` passes it to the map config plugin. Native device behavior still needs device testing.
 
+## Navigation
+
+The app opens directly to a full-screen station map. There is no landing page. The bottom bar stays visible on desktop and mobile, including during rental checkout and return dialogs:
+
+- **Map** returns to the station map.
+- **Weather news** opens the Hong Kong Observatory in a separate browser tab on web, or the browser on native.
+- **Scan to rent** sits in the center and opens the station scanner/code entry.
+- **Weather mode** opens a “Coming soon” placeholder; no weather behavior is implemented.
+- **Profile** includes profile details, rental history/receipts, payment preview, help, and local support notes.
+
 ## Try the full journey
 
-1. Search for a demo station or select a map marker. Switch between Borrow and Return to see umbrella and slot availability.
-2. Choose **Borrow here**, enter an optional name, and continue to the scan screen.
-3. Keep the displayed station code and choose **Simulate scan & unlock**. Native phones also have an optional QR camera scanner.
-4. **My rentals** shows the elapsed timer and estimated demo charge. Refreshing preserves the rental on this device.
+1. Search for a demo station, open **Stations**, or select a map marker. Switch between Borrow and Return to see umbrella and slot availability.
+2. Tap the centered **Scan to rent** button, or choose **Rent here** on a station card.
+3. Enter the station code or use **Try demo station**. Review the price, enter an optional name, and choose **Simulate unlock**. Native phones also have an optional QR camera scanner.
+4. **My rentals**, also accessible from **Profile**, shows the elapsed timer and estimated demo charge. Refreshing preserves the rental on this device.
 5. Choose **Find a return station**, select an open station with a free slot, and choose **Return here**.
 6. Confirm the simulated lock to finish. View the receipt in rental history.
 
@@ -30,8 +40,8 @@ Names, saved stations, rentals, and support notes persist using AsyncStorage on 
 
 ## Structure
 
-- `src/app/`: Expo Router screens (Explore, My rentals, How it works, Account).
-- `src/components/`: UI, responsive shell, rental dialogs, native and browser map adapters.
+- `src/app/`: Expo Router screens (Map, Scan to rent, Profile, My rentals, How it works, Weather mode placeholder).
+- `src/components/`: UI, persistent bottom navigation, secondary-screen shell, rental dialogs, native and browser map adapters.
 - `src/context/AppContext.tsx`: local demo data and rental transitions; replace this boundary with backend API calls.
 - `src/data/stations.ts`: clearly identified fictional inventory.
 - `src/lib/rental.ts`: pricing, distances, station opening hours, eligibility, and QR parsing.
