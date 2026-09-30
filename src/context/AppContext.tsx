@@ -4,18 +4,19 @@ import * as Location from 'expo-location';
 import { Coordinate, DEMO_CENTER, DEMO_STATIONS, Station } from '../data/stations';
 import { canUseStation, Mode, priceForDuration, Rental } from '../lib/rental';
 
-type Stored = { stations: Station[]; rental: Rental | null; history: Rental[]; name: string; favorites: string[]; reports: { id: string; note: string; createdAt: number }[] };
+export type Gender = 'woman' | 'man' | 'non-binary' | 'prefer-not-to-say';
+type Stored = { stations: Station[]; rental: Rental | null; history: Rental[]; name: string; age: number | null; gender: Gender | null; favorites: string[]; reports: { id: string; note: string; createdAt: number }[] };
 type Sheet = { kind: 'borrow' | 'return' | 'receipt'; stationId?: string; receipt?: Rental } | null;
 type AppValue = Stored & {
   ready: boolean; location: Coordinate | null; locationLoading: boolean; locationError: string | null;
   mode: Mode; setMode: (m: Mode) => void; sheet: Sheet; setSheet: (s: Sheet) => void;
   getLocation: () => Promise<void>; startRental: (id: string, name: string) => Rental;
   returnRental: (id: string) => Rental; toggleFavorite: (id: string) => void;
-  saveName: (name: string) => void; report: (note: string) => void; storageError: boolean;
+  saveProfile: (profile: { name: string; age: number; gender: Gender }) => void; report: (note: string) => void; storageError: boolean;
 };
 const Context = createContext<AppValue | null>(null);
 const KEY = 'rainborrow-demo-v1';
-const initial: Stored = { stations: DEMO_STATIONS, rental: null, history: [], name: '', favorites: [], reports: [] };
+const initial: Stored = { stations: DEMO_STATIONS, rental: null, history: [], name: '', age: null, gender: null, favorites: [], reports: [] };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Stored>(initial);
@@ -34,7 +35,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed.stations) || !Array.isArray(parsed.history) || !Array.isArray(parsed.favorites) || !Array.isArray(parsed.reports) || typeof parsed.name !== 'string') throw new Error('Invalid data');
-      if (mounted) { ref.current = parsed; setState(parsed); }
+      const restored: Stored = {
+        ...parsed,
+        age: typeof parsed.age === 'number' ? parsed.age : null,
+        gender: ['woman', 'man', 'non-binary', 'prefer-not-to-say'].includes(parsed.gender) ? parsed.gender : null,
+      };
+      if (mounted) { ref.current = restored; setState(restored); }
     }).catch(() => { if (mounted) setStorageError(true); }).finally(() => { if (mounted) setReady(true); });
     return () => { mounted = false; };
   }, []);
@@ -76,7 +82,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
   const value: AppValue = { ...state, ready, location, locationLoading, locationError, mode, setMode, sheet, setSheet, getLocation, startRental, returnRental, storageError,
     toggleFavorite(id) { const cur = ref.current; update({ ...cur, favorites: cur.favorites.includes(id) ? cur.favorites.filter(x => x !== id) : [...cur.favorites, id] }); },
-    saveName(name) { update({ ...ref.current, name: name.trim() }); },
+    saveProfile(profile) { update({ ...ref.current, name: profile.name.trim(), age: profile.age, gender: profile.gender }); },
     report(note) { const cur = ref.current; update({ ...cur, reports: [{ id: `HELP-${Date.now()}`, note, createdAt: Date.now() }, ...cur.reports] }); },
   };
   return <Context.Provider value={value}>{children}</Context.Provider>;
