@@ -13,23 +13,25 @@ import { AppProvider, useApp } from '../context/AppContext';
 import { RentalSheet } from '../components/RentalSheet';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { T } from '../components/ui';
-import { colors } from '../theme';
+import { colors, useTheme } from '../theme';
 
 function Content() {
   const { ready, storageError, sheet } = useApp();
+  const c = useTheme();
   const insets = useSafeAreaInsets();
-  if (!ready) return <View style={{ flex: 1, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View>;
-  return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: colors.cream }}>
-    {storageError && <View style={{ backgroundColor: colors.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
+  if (!ready) return <View style={{ flex: 1, backgroundColor: c.cream, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={c.green} /></View>;
+  return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: c.cream }}>
+    {storageError && <View style={{ backgroundColor: c.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
     <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <View style={{ flex: 1 }} pointerEvents={sheet ? 'none' : 'auto'} aria-hidden={!!sheet} importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}>
-        <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: colors.cream } }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.cream } }}>
           <Stack.Screen name="index" options={{ title: 'Map · RainBorrow' }} />
           <Stack.Screen name="scan" options={{ title: 'Scan to rent · RainBorrow' }} />
           <Stack.Screen name="rentals" options={{ title: 'My rentals · RainBorrow' }} />
           <Stack.Screen name="how-it-works" options={{ title: 'How it works · RainBorrow' }} />
           <Stack.Screen name="account" options={{ title: 'Profile · RainBorrow' }} />
           <Stack.Screen name="weather-mode" options={{ title: 'Weather mode · RainBorrow' }} />
+          <Stack.Screen name="settings" options={{ title: 'Settings · RainBorrow' }} />
         </Stack>
       </View>
       <RentalSheet />
@@ -40,5 +42,6 @@ function Content() {
 export default function RootLayout() {
   const [loaded, error] = useFonts({ DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold, DMSerifDisplay_400Regular });
   if (!loaded && !error) return <View style={{ flex: 1, backgroundColor: colors.cream, justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View>;
-  return <SafeAreaProvider><AppProvider><StatusBar style="dark" /><Content /></AppProvider></SafeAreaProvider>;
+  return <SafeAreaProvider><AppProvider><ThemedStatusBar /><Content /></AppProvider></SafeAreaProvider>;
 }
+function ThemedStatusBar() { const { appearance } = useApp(); return <StatusBar style={appearance === 'dark' ? 'light' : 'dark'} />; }

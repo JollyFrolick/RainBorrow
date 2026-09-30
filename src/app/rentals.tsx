@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { Shell } from '../components/Shell';
-import { Button, Icon, Pill, s, T, UmbrellaArt } from '../components/ui';
+import { Button, Icon, Pill, T, UmbrellaArt, useUiStyles } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { elapsedLabel, priceForDuration } from '../lib/rental';
-import { colors as c, fonts as f } from '../theme';
+import { fonts as f, useTheme } from '../theme';
 
 export default function Rentals() {
   const app = useApp(); const { width } = useWindowDimensions(); const [now, setNow] = useState(() => Date.now());
+  const c = useTheme(); const s = useUiStyles();
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   return <Shell><T style={s.label}>YOUR SHARED ADVENTURES</T><T style={[s.title, { marginTop: 10 }]}>My rentals</T><T style={[s.muted, { marginTop: 8, marginBottom: 28 }]}>A little shelter, from start to finish.</T>
     {app.rental ? <View style={[s.card, { backgroundColor: c.greenDark, padding: width < 600 ? 24 : 36, gap: 22 }]}>

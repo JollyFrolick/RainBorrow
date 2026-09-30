@@ -32,6 +32,8 @@ The app opens directly to a full-screen station map. There is no landing page. T
 
 Map controls provide zoom, station bounds, and your real location after explicit permission. Without location permission, browsing starts around Central, Hong Kong. Distances without permission are clearly labelled as distances from the demo centre, not your position. Directions open Google Maps externally.
 
+The settings button beneath the map-centering controls opens device-local preferences for light or dark appearance, the default borrow/return map mode, map tips, and on-demand location access.
+
 ## What is simulated
 
 All stations are fictional umbrella rental points at real Hong Kong landmarks. Inventory, accounts, payments, hardware events, support requests, and receipts are local demo data. No money is collected and no physical umbrella is released. The example price is HK$5 per started hour with a HK$30 cap per 24 hours. A real deployment must enforce pricing, allocation, and rental transitions on the backend.

@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
-import { colors as c, fonts as f } from '../theme';
-import { Icon, Pill, s, T } from './ui';
+import { fonts as f, ThemeColors, useTheme } from '../theme';
+import { Icon, Pill, T, useUiStyles } from './ui';
 
 /** Scrolling content for secondary screens. Navigation lives in the root layout. */
 export function Shell({ children }: { children: React.ReactNode }) {
   const { width } = useWindowDimensions();
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   return <View style={styles.root}>
     <View style={[styles.header, { paddingHorizontal: width < 760 ? 18 : 32 }]}>
       <Pressable accessibilityRole="link" accessibilityLabel="Back to map" onPress={() => router.replace('/')} style={s.row}>
@@ -18,7 +19,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </ScrollView>
   </View>;
 }
-const styles = StyleSheet.create({
+const createStyles = (c: ThemeColors) => StyleSheet.create({
   root: { flex: 1, backgroundColor: c.cream },
   header: { height: 62, backgroundColor: c.paper, borderBottomWidth: 1, borderBottomColor: c.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });

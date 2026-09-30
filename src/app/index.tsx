@@ -1,15 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
-import { Button, Icon, IconButton, Pill, s, T } from '../components/ui';
+import { Button, Icon, IconButton, Pill, T, useUiStyles } from '../components/ui';
 import StationMap from '../components/StationMap';
 import { useApp, DEMO_CENTER } from '../context/AppContext';
-import { colors as c, fonts as f } from '../theme';
+import { fonts as f, ThemeColors, useTheme } from '../theme';
 import { canUseStation, distanceMeters, formatDistance, isOpen, stationCount } from '../lib/rental';
 import type { Station } from '../data/stations';
 
 export default function MapScreen() {
   const app = useApp(); const { width, height } = useWindowDimensions(); const mobile = width < 760;
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   const [query, setQuery] = useState(''); const [selectedId, setSelected] = useState<string | null>(null);
   const [saved, setSaved] = useState(false); const [listOpen, setListOpen] = useState(false); const [centerRequest, setCenterRequest] = useState(0);
   const [directionsError, setDirectionsError] = useState('');
@@ -52,8 +53,8 @@ export default function MapScreen() {
           <View style={s.row}><Button title={app.mode === 'return' ? app.rental ? 'Return here' : 'Rent an umbrella first' : app.rental ? 'View rental' : 'Rent here · HK$5/hr'} icon={app.mode === 'return' ? 'corner-down-left' : 'maximize'} style={{ flex: 1, paddingHorizontal: 12 }} disabled={!canUseStation(selected, app.mode) || (app.mode === 'return' && !app.rental)} onPress={() => { if (app.mode === 'return') app.setSheet({ kind: 'return', stationId: selected.id }); else if (app.rental) router.replace('/rentals'); else router.replace({ pathname: '/scan', params: { stationId: selected.id } }); }} /><IconButton icon="navigation" label="Walking directions" onPress={directions} /><IconButton icon="bookmark" label={app.favorites.includes(selected.id) ? 'Unsave station' : 'Save station'} onPress={() => app.toggleFavorite(selected.id)} style={app.favorites.includes(selected.id) ? { backgroundColor: c.mint } : undefined} /></View>
           {directionsError ? <T style={{ color: c.red, fontSize: 12 }}>{directionsError}</T> : null}
         </ScrollView>
-      </View> : <View pointerEvents="none" style={styles.mapHint}><Icon name="map-pin" size={16} /><T style={{ fontSize: 12, fontFamily: f.medium }}>Tap a station to {app.mode === 'borrow' ? 'find an umbrella' : 'find a return slot'}</T></View>}
-      <T pointerEvents="none" style={styles.demoNote}>Demo stations · No real rentals or charges</T>
+      </View> : app.showMapTips ? <View pointerEvents="none" style={styles.mapHint}><Icon name="map-pin" size={16} /><T style={{ fontSize: 12, fontFamily: f.medium }}>Tap a station to {app.mode === 'borrow' ? 'find an umbrella' : 'find a return slot'}</T></View> : null}
+      {app.showMapTips && <T pointerEvents="none" style={styles.demoNote}>Demo stations · No real rentals or charges</T>}
     </View>}
   </View>;
 }
@@ -62,13 +63,14 @@ function stationStatus(station: Station, mode: 'borrow' | 'return') {
 }
 function StationRow({ station, onPress }: { station: Station; onPress: () => void }) {
   const { mode, location } = useApp();
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   return <Pressable accessibilityRole="button" accessibilityLabel={`Select ${station.name}`} onPress={onPress} style={styles.stationRow}>
     <View style={s.between}><T style={{ fontFamily: f.semibold, flex: 1 }}>{station.name}</T><Icon name="chevron-right" size={17} /></View>
     <T style={{ fontSize: 11, color: c.muted, marginTop: 5 }}>{formatDistance(distanceMeters(location || DEMO_CENTER, station))}{location ? ' away' : ' from demo centre'} · {stationStatus(station, mode)}</T>
   </Pressable>;
 }
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#E8EDE3' },
+const createStyles = (c: ThemeColors) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: c.sage },
   top: { position: 'absolute', top: 16, left: 14, gap: 10, zIndex: 10 },
   search: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, backgroundColor: c.paper, borderRadius: 18, borderWidth: 1, borderColor: c.line, boxShadow: '0 4px 20px #15382c12' },
   logo: { width: 35, height: 35, borderRadius: 12, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' },
@@ -87,5 +89,5 @@ const styles = StyleSheet.create({
   details: { backgroundColor: c.paper, borderRadius: 20, borderWidth: 1, borderColor: c.line, boxShadow: '0 6px 28px #15382c20', overflow: 'hidden' },
   eyebrow: { fontFamily: f.medium, fontSize: 10, color: c.muted, textTransform: 'uppercase', letterSpacing: .7 },
   mapHint: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, padding: 13, borderRadius: 12, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line },
-  demoNote: { fontSize: 10, color: c.greenDark, alignSelf: 'flex-start', backgroundColor: '#FFFFFFE8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
+  demoNote: { fontSize: 10, color: c.ink, alignSelf: 'flex-start', backgroundColor: c.paper, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
 });

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { Shell } from '../components/Shell';
-import { Button, Icon, IconName, s, T, UmbrellaArt } from '../components/ui';
-import { colors as c, fonts as f } from '../theme';
+import { Button, Icon, IconName, T, UmbrellaArt, useUiStyles } from '../components/ui';
+import { fonts as f, useTheme } from '../theme';
 
 const steps: { number: string; icon: IconName; title: string; text: string }[] = [
   { number: '01', icon: 'map-pin', title: 'Find your shelter.', text: 'Open the map, choose Borrow, and find a station with umbrellas available. Check its opening hours and get walking directions.' },
@@ -19,6 +19,7 @@ const faqs = [
 ];
 export default function HowItWorks() {
   const { width } = useWindowDimensions(); const [open, setOpen] = useState<number | null>(0);
+  const c = useTheme(); const s = useUiStyles();
   return <Shell><View style={{ alignItems: 'center', marginBottom: 32, marginTop: 8 }}><T style={s.label}>A BETTER WAY TO WEATHER THE DAY</T><T style={[s.title, { textAlign: 'center', marginTop: 13, fontSize: width < 600 ? 36 : 48, lineHeight: 54 }]}>Borrow a little cover.</T><T style={[s.muted, { textAlign: 'center', marginTop: 9 }]}>Three simple steps. One less thing to carry.</T></View>
     <View style={{ flexDirection: width < 850 ? 'column' : 'row', gap: 20 }}>{steps.map(step => <View key={step.number} style={[s.card, { flex: 1, gap: 19, padding: 28 }]}><View style={s.between}><View style={{ height: 52, width: 52, backgroundColor: c.sage, borderRadius: 16, justifyContent: 'center', alignItems: 'center' }}><Icon name={step.icon} size={24} /></View><T style={{ fontFamily: f.display, fontSize: 28, color: '#BECBBB' }}>{step.number}</T></View><T style={{ fontFamily: f.display, fontSize: 27 }}>{step.title}</T><T style={s.muted}>{step.text}</T></View>)}</View>
     <View style={{ backgroundColor: c.greenDark, borderRadius: 22, marginTop: 24, padding: 28, flexDirection: 'row', alignItems: 'center', gap: 12 }}><View style={{ flex: 1, gap: 10 }}><T style={{ fontFamily: f.display, color: '#fff', fontSize: 30 }}>Rain happens. Keep going.</T><T style={{ color: '#BCCFC1', lineHeight: 20 }}>Your next adventure is just an umbrella away.</T><Button secondary title="Explore the stations" icon="arrow-right" style={{ alignSelf: 'flex-start', marginTop: 6 }} onPress={() => router.replace('/')} /></View>{width > 450 && <UmbrellaArt width={160} height={155} dark />}</View>

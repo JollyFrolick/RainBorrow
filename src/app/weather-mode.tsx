@@ -2,10 +2,11 @@ import React from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Shell } from '../components/Shell';
-import { Button, Icon, Pill, s, T } from '../components/ui';
-import { colors as c } from '../theme';
+import { Button, Icon, Pill, T, useUiStyles } from '../components/ui';
+import { useTheme } from '../theme';
 
 export default function WeatherMode() {
+  const c = useTheme(); const s = useUiStyles();
   return <Shell><View style={{ maxWidth: 460, width: '100%', alignSelf: 'center', alignItems: 'center', paddingVertical: 45, gap: 20 }}>
     <View style={{ width: 104, height: 104, borderRadius: 32, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }}><Icon name="cloud-rain" size={48} /></View>
     <Pill>COMING SOON</Pill><T style={[s.title, { fontSize: 34, textAlign: 'center' }]}>Weather mode</T>

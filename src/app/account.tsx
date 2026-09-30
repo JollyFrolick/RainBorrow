@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { Shell } from '../components/Shell';
-import { Button, Icon, Pill, s, T } from '../components/ui';
+import { Button, Icon, Pill, T, useUiStyles } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import type { Gender } from '../context/AppContext';
-import { colors as c, fonts as f } from '../theme';
+import { fonts as f, ThemeColors, useTheme } from '../theme';
 
 const GENDER_OPTIONS: { label: string; value: Gender }[] = [
   { label: 'Woman', value: 'woman' },
@@ -16,6 +16,7 @@ const GENDER_OPTIONS: { label: string; value: Gender }[] = [
 
 export default function Account() {
   const app = useApp(); const { width } = useWindowDimensions(); const [name, setName] = useState(app.name); const [age, setAge] = useState(app.age?.toString() || ''); const [gender, setGender] = useState<Gender | null>(app.gender); const [saved, setSaved] = useState(false); const [note, setNote] = useState(''); const [sent, setSent] = useState(false);
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   const numericAge = Number(age);
   const ageIsValid = Number.isInteger(numericAge) && numericAge >= 1 && numericAge <= 120;
   const profileIsValid = !!name.trim() && ageIsValid && !!gender;
@@ -37,7 +38,7 @@ export default function Account() {
   </Shell>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (c: ThemeColors) => StyleSheet.create({
   fieldLabel: { fontSize: 12, fontFamily: f.semibold },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
   option: { minHeight: 44, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: c.line, backgroundColor: c.cream, flexDirection: 'row', alignItems: 'center', gap: 8 },

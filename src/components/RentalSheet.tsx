@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useApp } from '../context/AppContext';
-import { Button, Icon, IconButton, Pill, s, T, UmbrellaArt } from './ui';
-import { colors as c, fonts as f } from '../theme';
+import { Button, Icon, IconButton, Pill, T, UmbrellaArt, useUiStyles } from './ui';
+import { fonts as f, ThemeColors, useTheme } from '../theme';
 
 export function RentalSheet() {
   const { sheet } = useApp();
@@ -12,6 +12,7 @@ export function RentalSheet() {
 }
 function RentalDialog() {
   const app = useApp(); const { width } = useWindowDimensions(); const mobile = width < 600;
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   const [name, setName] = useState(app.name); const [error, setError] = useState(''); const [confirmed, setConfirmed] = useState(false);
   const sheet = app.sheet; const station = app.stations.find(s => s.id === sheet?.stationId);
   const close = () => app.setSheet(null);
@@ -49,5 +50,5 @@ function RentalDialog() {
     {error ? <T accessibilityRole="alert" style={{ color: c.red, fontSize: 12, lineHeight: 18 }}>{error}</T> : null}
   </ScrollView></View></View>;
 }
-function Summary({ label, value }: { label: string; value: string }) { return <View style={[s.between, { alignItems: 'flex-start' }]}><T style={{ fontSize: 12, color: c.muted, flex: 1 }}>{label}</T><T style={{ fontSize: 12, fontFamily: f.semibold, flex: 1, textAlign: 'right' }}>{value}</T></View>; }
-const styles = StyleSheet.create({ backdrop: { flex: 1, backgroundColor: '#102D2570', alignItems: 'center', justifyContent: 'center' }, dialog: { borderRadius: 25, backgroundColor: c.paper, overflow: 'hidden' }, summary: { borderRadius: 15, backgroundColor: c.cream, padding: 20, gap: 16 }, rule: { height: 1, backgroundColor: c.line }, number: { width: 30, height: 30, borderRadius: 10, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }, checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center' }, success: { height: 68, width: 68, borderRadius: 34, backgroundColor: c.mint, alignItems: 'center', justifyContent: 'center' } });
+function Summary({ label, value }: { label: string; value: string }) { const c = useTheme(); const s = useUiStyles(); return <View style={[s.between, { alignItems: 'flex-start' }]}><T style={{ fontSize: 12, color: c.muted, flex: 1 }}>{label}</T><T style={{ fontSize: 12, fontFamily: f.semibold, flex: 1, textAlign: 'right' }}>{value}</T></View>; }
+const createStyles = (c: ThemeColors) => StyleSheet.create({ backdrop: { flex: 1, backgroundColor: '#102D25A0', alignItems: 'center', justifyContent: 'center' }, dialog: { borderRadius: 25, backgroundColor: c.paper, overflow: 'hidden' }, summary: { borderRadius: 15, backgroundColor: c.cream, padding: 20, gap: 16 }, rule: { height: 1, backgroundColor: c.line }, number: { width: 30, height: 30, borderRadius: 10, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }, checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center' }, success: { height: 68, width: 68, borderRadius: 34, backgroundColor: c.mint, alignItems: 'center', justifyContent: 'center' } });

@@ -5,7 +5,8 @@ import { Coordinate, DEMO_CENTER, DEMO_STATIONS, Station } from '../data/station
 import { canUseStation, Mode, priceForDuration, Rental } from '../lib/rental';
 
 export type Gender = 'woman' | 'man' | 'non-binary' | 'prefer-not-to-say';
-type Stored = { stations: Station[]; rental: Rental | null; history: Rental[]; name: string; age: number | null; gender: Gender | null; favorites: string[]; reports: { id: string; note: string; createdAt: number }[] };
+export type Appearance = 'light' | 'dark';
+type Stored = { stations: Station[]; rental: Rental | null; history: Rental[]; name: string; age: number | null; gender: Gender | null; favorites: string[]; reports: { id: string; note: string; createdAt: number }[]; appearance: Appearance; defaultMode: Mode; showMapTips: boolean };
 type Sheet = { kind: 'borrow' | 'return' | 'receipt'; stationId?: string; receipt?: Rental } | null;
 type AppValue = Stored & {
   ready: boolean; location: Coordinate | null; locationLoading: boolean; locationError: string | null;
@@ -13,10 +14,11 @@ type AppValue = Stored & {
   getLocation: () => Promise<void>; startRental: (id: string, name: string) => Rental;
   returnRental: (id: string) => Rental; toggleFavorite: (id: string) => void;
   saveProfile: (profile: { name: string; age: number; gender: Gender }) => void; report: (note: string) => void; storageError: boolean;
+  setAppearance: (appearance: Appearance) => void; setDefaultMode: (mode: Mode) => void; setShowMapTips: (show: boolean) => void;
 };
 const Context = createContext<AppValue | null>(null);
 const KEY = 'rainborrow-demo-v1';
-const initial: Stored = { stations: DEMO_STATIONS, rental: null, history: [], name: '', age: null, gender: null, favorites: [], reports: [] };
+const initial: Stored = { stations: DEMO_STATIONS, rental: null, history: [], name: '', age: null, gender: null, favorites: [], reports: [], appearance: 'light', defaultMode: 'borrow', showMapTips: true };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Stored>(initial);
@@ -39,8 +41,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...parsed,
         age: typeof parsed.age === 'number' ? parsed.age : null,
         gender: ['woman', 'man', 'non-binary', 'prefer-not-to-say'].includes(parsed.gender) ? parsed.gender : null,
+        appearance: parsed.appearance === 'dark' ? 'dark' : 'light',
+        defaultMode: parsed.defaultMode === 'return' ? 'return' : 'borrow',
+        showMapTips: typeof parsed.showMapTips === 'boolean' ? parsed.showMapTips : true,
       };
-      if (mounted) { ref.current = restored; setState(restored); }
+      if (mounted) { ref.current = restored; setState(restored); setMode(restored.defaultMode); }
     }).catch(() => { if (mounted) setStorageError(true); }).finally(() => { if (mounted) setReady(true); });
     return () => { mounted = false; };
   }, []);
@@ -84,6 +89,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toggleFavorite(id) { const cur = ref.current; update({ ...cur, favorites: cur.favorites.includes(id) ? cur.favorites.filter(x => x !== id) : [...cur.favorites, id] }); },
     saveProfile(profile) { update({ ...ref.current, name: profile.name.trim(), age: profile.age, gender: profile.gender }); },
     report(note) { const cur = ref.current; update({ ...cur, reports: [{ id: `HELP-${Date.now()}`, note, createdAt: Date.now() }, ...cur.reports] }); },
+    setAppearance(appearance) { update({ ...ref.current, appearance }); },
+    setDefaultMode(defaultMode) { update({ ...ref.current, defaultMode }); setMode(defaultMode); },
+    setShowMapTips(showMapTips) { update({ ...ref.current, showMapTips }); },
   };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

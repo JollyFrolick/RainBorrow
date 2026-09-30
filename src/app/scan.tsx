@@ -1,15 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Shell } from '../components/Shell';
-import { Button, Icon, Pill, s, T } from '../components/ui';
+import { Button, Icon, Pill, T, useUiStyles } from '../components/ui';
 import { useApp } from '../context/AppContext';
 import { canUseStation, parseStationCode } from '../lib/rental';
-import { colors as c, fonts as f } from '../theme';
+import { fonts as f, ThemeColors, useTheme } from '../theme';
 
 export default function Scan() {
   const app = useApp(); const params = useLocalSearchParams<{ stationId?: string }>();
+  const c = useTheme(); const s = useUiStyles(); const styles = useMemo(() => createStyles(c), [c]);
   const [code, setCode] = useState(params.stationId || ''); const [error, setError] = useState('');
   const [camera, setCamera] = useState(false); const [permission, requestPermission] = useCameraPermissions();
   const scanning = useRef(false); const focused = useIsFocused();
@@ -45,7 +46,7 @@ export default function Scan() {
     </>}
   </View></Shell>;
 }
-const styles = StyleSheet.create({
+const createStyles = (c: ThemeColors) => StyleSheet.create({
   content: { maxWidth: 460, width: '100%', alignSelf: 'center', gap: 20 },
   scanner: { minHeight: 230, borderRadius: 24, backgroundColor: c.greenDark, justifyContent: 'center', alignItems: 'center', gap: 15, padding: 24, overflow: 'hidden' },
   frame: { width: 96, height: 88, alignItems: 'center', justifyContent: 'center' },
