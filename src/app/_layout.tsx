@@ -13,6 +13,7 @@ import { AppProvider, useApp } from '../context/AppContext';
 import { RentalSheet } from '../components/RentalSheet';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { T } from '../components/ui';
+import { SettingsExitVideoAd, TopBannerAd } from '../components/Ads';
 import { colors, useTheme } from '../theme';
 
 function Content() {
@@ -22,6 +23,8 @@ function Content() {
   if (!ready) return <View style={{ flex: 1, backgroundColor: c.cream, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={c.green} /></View>;
   return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: c.cream }}>
     {storageError && <View style={{ backgroundColor: c.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
+    <TopBannerAd />
+    <SettingsExitVideoAd />
     <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <View style={{ flex: 1 }} pointerEvents={sheet ? 'none' : 'auto'} aria-hidden={!!sheet} importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}>
         <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.cream } }}>

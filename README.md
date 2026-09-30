@@ -11,6 +11,8 @@ npm run web
 
 For a phone, run `npm start` and open the project with a compatible Expo Go version. `npm run ios` and `npm run android` target installed simulators/emulators. Production Android builds require your own Google Maps API key and app restrictions, Set `GOOGLE_MAPS_ANDROID_API_KEY` in a local `.env` file; `app.config.ts` passes it to the map config plugin. Native device behavior still needs device testing.
 
+The app includes a clearly labeled banner ad placeholder at the top and a video-style ad placeholder whenever a user leaves Settings. These are local interface demos: they do not connect to an ad network, collect ad data, or require a custom native build.
+
 ## Navigation
 
 The app opens directly to a full-screen station map. There is no landing page. The bottom bar stays visible on desktop and mobile, including during rental checkout and return dialogs:
