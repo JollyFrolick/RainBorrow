@@ -33,7 +33,6 @@ function Content() {
           <Stack.Screen name="rentals" options={{ title: 'My rentals · RainBorrow' }} />
           <Stack.Screen name="how-it-works" options={{ title: 'How it works · RainBorrow' }} />
           <Stack.Screen name="account" options={{ title: 'Profile · RainBorrow' }} />
-          <Stack.Screen name="weather-mode" options={{ title: 'Weather mode · RainBorrow' }} />
           <Stack.Screen name="settings" options={{ title: 'Settings · RainBorrow' }} />
         </Stack>
       </View>

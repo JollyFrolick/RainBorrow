@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#245B49",
+        "backgroundColor": "#DDF4FF",
         "foregroundImage": "./assets/rainborrow-icon.png"
       },
       "predictiveBackGestureEnabled": false,

@@ -1,17 +1,15 @@
 import React, { useMemo } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import { Link, router, usePathname } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { fonts as f, ThemeColors, useTheme } from '../theme';
 import { Icon, IconName, T } from './ui';
 
-const HKO_URL = 'https://www.hko.gov.hk/en/index.html';
-
 export function BottomNavigation() {
   const path = usePathname(); const insets = useSafeAreaInsets(); const { setSheet } = useApp();
   const c = useTheme(); const styles = useMemo(() => createStyles(c), [c]);
-  function navigate(destination: '/' | '/scan' | '/account' | '/weather-mode') {
+  function navigate(destination: '/' | '/scan' | '/account') {
     setSheet(null);
     if (path !== destination) router.replace(destination);
   }
@@ -19,16 +17,10 @@ export function BottomNavigation() {
   return <View testID="bottom-navigation" style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
     <View style={styles.items}>
       <NavItem label="Map" icon="map" active={path === '/'} onPress={() => navigate('/')} c={c} styles={styles} />
-      <Link href={HKO_URL} target="_blank" rel="noopener noreferrer" asChild>
-        <Pressable accessibilityRole="link" accessibilityLabel="Weather news — Hong Kong Observatory (opens in browser)" {...(Platform.OS === 'web' ? { hrefAttrs: { target: '_blank', rel: 'noopener noreferrer' } } : {})} style={styles.item}>
-          <Icon name="cloud" size={22} color={c.muted} /><T style={styles.label}>Weather news</T>
-        </Pressable>
-      </Link>
       <Pressable accessibilityRole="button" accessibilityLabel="Scan to rent" accessibilityState={{ selected: path === '/scan' }} onPress={() => navigate('/scan')} style={styles.scanItem}>
-        <View style={[styles.scanIcon, path === '/scan' && { backgroundColor: c.greenDark }]}><Icon name="maximize" color="white" size={28} /></View>
+        <View style={[styles.scanIcon, path === '/scan' && { backgroundColor: c.blue }]}><Icon name="maximize" color={c.greenDark} size={28} /></View>
         <T style={[styles.label, { color: c.green, fontFamily: f.bold }]}>Scan to rent</T>
       </Pressable>
-      <NavItem label="Weather mode" icon="cloud-rain" active={path === '/weather-mode'} onPress={() => navigate('/weather-mode')} c={c} styles={styles} />
       <NavItem label="Profile" icon="user" active={profileActive} onPress={() => navigate('/account')} c={c} styles={styles} />
     </View>
   </View>;
@@ -46,6 +38,6 @@ const createStyles = (c: ThemeColors) => StyleSheet.create({
   item: { flex: 1, minWidth: 0, minHeight: 66, alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 2 },
   label: { fontSize: 10, lineHeight: 14, color: c.muted, fontFamily: f.medium, textAlign: 'center' },
   scanItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: 5, paddingHorizontal: 2 },
-  scanIcon: { width: 54, height: 54, borderRadius: 19, backgroundColor: c.green, justifyContent: 'center', alignItems: 'center' },
-  indicator: { position: 'absolute', bottom: 0, width: 4, height: 4, borderRadius: 2, backgroundColor: c.green },
+  scanIcon: { width: 54, height: 54, borderRadius: 19, backgroundColor: c.lime, justifyContent: 'center', alignItems: 'center' },
+  indicator: { position: 'absolute', bottom: 0, width: 4, height: 4, borderRadius: 2, backgroundColor: c.lime },
 });

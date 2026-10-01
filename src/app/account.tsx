@@ -46,6 +46,6 @@ const createStyles = (c: ThemeColors) => StyleSheet.create({
   optionText: { fontSize: 12, fontFamily: f.medium },
   radio: { width: 17, height: 17, borderRadius: 9, borderWidth: 1.5, borderColor: c.muted, alignItems: 'center', justifyContent: 'center' },
   radioSelected: { borderColor: c.green },
-  radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: c.green },
+  radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: c.lime },
   error: { color: c.red, fontSize: 11 },
 });

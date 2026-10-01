@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -9,6 +9,8 @@ import { canUseStation, stationCount } from '../lib/rental';
 import { StationMapProps } from './StationMap.types';
 import { IconButton, T } from './ui';
 import { useTheme } from '../theme';
+
+const HKO_URL = 'https://www.hko.gov.hk/en/index.html';
 
 export default function StationMap({ stations, selectedId, onSelect, location, mode, centerRequest, onLocate, locating, controlsTop = 16, bottomInset = 40 }: StationMapProps) {
   const c = useTheme();
@@ -50,12 +52,14 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
   }, [selectedId, stations, bottomInset, controlsTop]);
   useEffect(() => {
     user.current?.clearLayers(); if (!location || !user.current) return;
-    L.circleMarker([location.latitude, location.longitude], { radius: 9, color: 'white', weight: 3, fillColor: '#5484D5', fillOpacity: 1 }).bindTooltip('Your location').addTo(user.current);
+    L.circleMarker([location.latitude, location.longitude], { radius: 9, color: 'white', weight: 3, fillColor: '#0EA5E9', fillOpacity: 1 }).bindTooltip('Your location').addTo(user.current);
   }, [location]);
   useEffect(() => { if (centerRequest && location) map.current?.setView([location.latitude, location.longitude], 15); }, [centerRequest, location]);
   return <View style={{ flex: 1, backgroundColor: c.sage, position: 'relative', minHeight: 280 }}>
     <div ref={element} aria-label="Map of demo umbrella stations in Hong Kong" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-    <View style={{ position: 'absolute', right: 14, top: controlsTop, gap: 7, zIndex: 1000 }}><IconButton icon="plus" label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { paddingTopLeft: [70, controlsTop], paddingBottomRight: [70, bottomInset] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /><IconButton icon="settings" label="Open settings" onPress={() => router.push('/settings')} /></View>
+    <View style={{ position: 'absolute', right: 14, top: controlsTop, gap: 8, zIndex: 1000 }}><IconButton icon="plus" size={22} style={mapStyles.controlButton} label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" size={22} style={mapStyles.controlButton} label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" size={22} style={mapStyles.controlButton} label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" size={22} style={mapStyles.controlButton} label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { paddingTopLeft: [70, controlsTop], paddingBottomRight: [70, bottomInset] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /><IconButton icon="settings" size={22} style={mapStyles.controlButton} label="Open settings" onPress={() => router.push('/settings')} /><IconButton icon="cloud" size={22} style={mapStyles.controlButton} label="Weather news — Hong Kong Observatory (opens in browser)" onPress={() => Linking.openURL(HKO_URL)} /></View>
     {mapError && <View style={{ position: 'absolute', bottom: 24, left: 14, right: 65, backgroundColor: c.paper, borderRadius: 8, padding: 10 }}><T style={{ fontSize: 12 }}>Map tiles are unavailable. You can still choose a station from the list.</T></View>}
   </View>;
 }
+
+const mapStyles = StyleSheet.create({ controlButton: { width: 48, height: 48, borderRadius: 14 } });

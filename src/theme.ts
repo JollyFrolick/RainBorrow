@@ -1,16 +1,16 @@
 import { useApp } from './context/AppContext';
 
 export const lightColors = {
-  ink: '#193D35', green: '#245B49', greenDark: '#183E33', sage: '#E8EEE5',
-  mint: '#D2E7C6', lime: '#DFF299', cream: '#F8F9F5', paper: '#FFFFFF',
-  muted: '#7D8981', line: '#E4E8E0', orange: '#B47335', orangeLight: '#FFF0DD',
-  blue: '#5C92B5', red: '#AD5045',
+  ink: '#073B4C', green: '#087A3E', greenDark: '#063747', sage: '#DDF4FF',
+  mint: '#C9F7D8', lime: '#45F28A', cream: '#F3FAFF', paper: '#FFFFFF',
+  muted: '#5D7883', line: '#C3E4F2', orange: '#A85A19', orangeLight: '#FFF0DD',
+  blue: '#38BDF8', red: '#B93846',
 };
 export const darkColors: typeof lightColors = {
-  ink: '#F1F5EF', green: '#39765E', greenDark: '#10251D', sage: '#263A31',
-  mint: '#31513F', lime: '#DFF299', cream: '#101713', paper: '#19231E',
-  muted: '#A7B2AB', line: '#35463D', orange: '#E0A060', orangeLight: '#4A3322',
-  blue: '#79A9C8', red: '#EE8D83',
+  ink: '#EAFBFF', green: '#25B866', greenDark: '#061F2B', sage: '#103544',
+  mint: '#124C38', lime: '#45F28A', cream: '#071923', paper: '#0C2733',
+  muted: '#9CB8C2', line: '#245267', orange: '#F0A35E', orangeLight: '#4A2E1C',
+  blue: '#63CEFF', red: '#FF8A96',
 };
 export type ThemeColors = typeof lightColors;
 /** Light palette retained for non-react startup surfaces. */
