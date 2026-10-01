@@ -20,5 +20,5 @@ export function Shell({ children }: { children: React.ReactNode }) {
 }
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: c.cream },
-  header: { height: 62, backgroundColor: c.paper, borderBottomWidth: 1, borderBottomColor: c.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  header: { height: 62, backgroundColor: c.paper, borderBottomWidth: 2, borderBottomColor: c.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });

@@ -40,11 +40,11 @@ function NavItem({ label, icon, active, onPress }: { label: string; icon: IconNa
   </Pressable>;
 }
 const styles = StyleSheet.create({
-  bar: { backgroundColor: c.paper, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 8, zIndex: 30 },
+  bar: { backgroundColor: c.paper, borderTopWidth: 2, borderTopColor: c.line, paddingTop: 8, zIndex: 30 },
   items: { width: '100%', maxWidth: 780, alignSelf: 'center', flexDirection: 'row', alignItems: 'center' },
   item: { flex: 1, minWidth: 0, minHeight: 66, alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 2 },
   label: { fontSize: 10, lineHeight: 14, color: c.muted, fontFamily: f.medium, textAlign: 'center' },
   scanItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: 5, paddingHorizontal: 2 },
   scanIcon: { width: 54, height: 54, borderRadius: 19, backgroundColor: c.green, justifyContent: 'center', alignItems: 'center' },
-  indicator: { position: 'absolute', bottom: 0, width: 4, height: 4, borderRadius: 2, backgroundColor: c.green },
+  indicator: { position: 'absolute', bottom: 0, width: 24, height: 4, borderRadius: 2, backgroundColor: c.green },
 });

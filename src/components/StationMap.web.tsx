@@ -51,7 +51,7 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
     L.circleMarker([location.latitude, location.longitude], { radius: 9, color: 'white', weight: 3, fillColor: '#5484D5', fillOpacity: 1 }).bindTooltip('Your location').addTo(user.current);
   }, [location]);
   useEffect(() => { if (centerRequest && location) map.current?.setView([location.latitude, location.longitude], 15); }, [centerRequest, location]);
-  return <View style={{ flex: 1, backgroundColor: '#E8EDE3', position: 'relative', minHeight: 280 }}>
+  return <View style={{ flex: 1, backgroundColor: c.cream, position: 'relative', minHeight: 280 }}>
     <div ref={element} aria-label="Map of demo umbrella stations in Hong Kong" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
     <View style={{ position: 'absolute', right: 14, top: controlsTop, gap: 7 }}><IconButton icon="plus" label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { paddingTopLeft: [70, controlsTop], paddingBottomRight: [70, bottomInset] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /></View>
     {mapError && <View style={{ position: 'absolute', bottom: 24, left: 14, right: 65, backgroundColor: c.paper, borderRadius: 8, padding: 10 }}><T style={{ fontSize: 12 }}>Map tiles are unavailable. You can still choose a station from the list.</T></View>}
