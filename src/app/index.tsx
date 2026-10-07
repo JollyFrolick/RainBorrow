@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Image, Keyboard, Linking, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { Button, Icon, IconButton, Pill, s, T } from '../components/ui';
 import StationMap from '../components/StationMap';
@@ -26,7 +26,7 @@ export default function MapScreen() {
     <StationMap stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={mobile ? 145 : 22} bottomInset={mobile && selected ? 285 : 40} />
     <View pointerEvents="box-none" style={[styles.top, { right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
       <View style={styles.search}>
-        <View style={styles.logo}><Icon name="umbrella" color="white" size={21} /></View>
+        <Image source={require('../../assets/rainborrow-logo.png')} accessibilityLabel="RainBorrow logo" style={styles.logo} resizeMode="contain" />
         <TextInput accessibilityLabel="Search stations or areas" value={query} onFocus={() => setListOpen(true)} onChangeText={value => { setQuery(value); setListOpen(true); }} placeholder="Find an umbrella station" placeholderTextColor={c.muted} style={styles.searchInput} />
         {query ? <IconButton icon="x" label="Clear search" onPress={() => setQuery('')} style={styles.smallButton} /> : <Icon name="search" size={19} color={c.muted} />}
       </View>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#E8EDE3' },
   top: { position: 'absolute', top: 16, left: 14, gap: 10, zIndex: 10 },
   search: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, backgroundColor: c.paper, borderRadius: 18, borderWidth: 1, borderColor: c.line, boxShadow: '0 4px 20px #15382c12' },
-  logo: { width: 35, height: 35, borderRadius: 12, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 35, height: 35 },
   searchInput: { flex: 1, minWidth: 0, fontFamily: f.medium, fontSize: 13, color: c.ink, paddingVertical: 17 },
   smallButton: { width: 32, height: 32, borderWidth: 0, backgroundColor: 'transparent' },
   tools: { flexDirection: 'row', gap: 10, alignItems: 'center' },

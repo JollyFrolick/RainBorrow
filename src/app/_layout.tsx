@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Image, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,10 +15,17 @@ import { BottomNavigation } from '../components/BottomNavigation';
 import { T } from '../components/ui';
 import { colors } from '../theme';
 
+function LoadingScreen() {
+  return <View style={{ flex: 1, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+    <Image source={require('../../assets/rainborrow-logo.png')} accessibilityLabel="RainBorrow logo" style={{ width: 120, height: 120 }} resizeMode="contain" />
+    <ActivityIndicator color={colors.green} />
+  </View>;
+}
+
 function Content() {
   const { ready, storageError, sheet } = useApp();
   const insets = useSafeAreaInsets();
-  if (!ready) return <View style={{ flex: 1, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View>;
+  if (!ready) return <LoadingScreen />;
   return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: colors.cream }}>
     {storageError && <View style={{ backgroundColor: colors.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
     <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -39,6 +46,6 @@ function Content() {
 }
 export default function RootLayout() {
   const [loaded, error] = useFonts({ DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold, DMSerifDisplay_400Regular });
-  if (!loaded && !error) return <View style={{ flex: 1, backgroundColor: colors.cream, justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View>;
+  if (!loaded && !error) return <LoadingScreen />;
   return <SafeAreaProvider><AppProvider><StatusBar style="dark" /><Content /></AppProvider></SafeAreaProvider>;
 }
