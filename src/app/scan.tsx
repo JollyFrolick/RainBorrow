@@ -33,7 +33,7 @@ export default function Scan() {
   }
   return <Shell><View style={styles.content}>
     <View style={{ gap: 8 }}><T style={s.label}>YOUR NEXT UMBRELLA</T><T style={[s.title, { fontSize: 34 }]}>Scan to rent</T><T style={s.muted}>{app.rental ? 'You already have an umbrella out.' : 'At a station? Scan its QR code to get started.'}</T></View>
-    {app.rental ? <View style={[s.card, { gap: 18 }]}><Pill>RENTAL ACTIVE</Pill><T style={{ fontFamily: f.semibold }}>Return your current umbrella before renting another.</T><Button title="View my rental" icon="umbrella" onPress={() => router.replace('/rentals')} /><Button secondary title="Find a return station" icon="map" onPress={() => { app.setMode('return'); router.replace('/'); }} /></View> : <>
+    {app.rental ? <View style={[s.card, { gap: 18 }]}><Pill>RENTAL ACTIVE</Pill><T style={{ fontFamily: f.semibold }}>Return your current umbrella before renting another.</T><Button title="View my rental" icon="umbrella" onPress={() => router.replace('/rentals')} /><Button secondary title="Find a return station" icon="map" onPress={() => { router.replace('/'); }} /></View> : <>
       <View style={styles.scanner}>
         {camera && focused && !app.sheet && Platform.OS !== 'web' ? <CameraView style={StyleSheet.absoluteFill} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={({ data }) => scan(data)} /> : <><View style={styles.frame}><Icon name="maximize" color={c.lime} size={66} /></View><T style={{ fontFamily: f.semibold, color: 'white', fontSize: 16 }}>Find the QR on the station</T><T style={{ color: '#BCD1C2', fontSize: 12, textAlign: 'center', lineHeight: 18, maxWidth: 260 }}>{Platform.OS === 'web' ? 'Using a laptop? Enter the station code below to try the rental.' : 'Enable your camera, or enter the station code below.'}</T></>}
       </View>
@@ -41,7 +41,7 @@ export default function Scan() {
       <View style={{ gap: 9 }}><T style={{ fontFamily: f.semibold, fontSize: 13 }}>Station code</T><TextInput accessibilityLabel="Station code" style={[s.input, { backgroundColor: c.paper, fontFamily: f.bold, letterSpacing: 2 }]} placeholder="e.g. RB-001" placeholderTextColor={c.muted} value={code} onChangeText={value => { setCode(value); setError(''); }} maxLength={20} autoCapitalize="characters" autoCorrect={false} onSubmitEditing={() => scan(code)} /><Button title="Review rental" icon="arrow-right" disabled={!code.trim()} onPress={() => scan(code)} /></View>
       {error && <T accessibilityRole="alert" style={{ color: c.red, fontSize: 12, lineHeight: 18 }}>{error}</T>}
       {example && <Button secondary title={`Try demo station · ${example.id}`} onPress={() => scan(example.id)} />}
-      <T style={{ fontSize: 11, color: c.muted, lineHeight: 18, textAlign: 'center' }}>HK$5 per started hour · HK$30 maximum per 24 hours.{ '\n' }Review the price before unlocking. No real charges in this demo.</T>
+      <T style={{ fontSize: 11, color: c.muted, lineHeight: 18, textAlign: 'center' }}>First 24 hours free, then HK$5 per started hour · HK$30 maximum per paid 24 hours.{ '\n' }Review the price before unlocking. No real charges in this demo.</T>
     </>}
   </View></Shell>;
 }

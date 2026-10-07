@@ -6,15 +6,15 @@ import { Button, Icon, IconName, s, T, UmbrellaArt } from '../components/ui';
 import { colors as c, fonts as f } from '../theme';
 
 const steps: { number: string; icon: IconName; title: string; text: string }[] = [
-  { number: '01', icon: 'map-pin', title: 'Find your shelter.', text: 'Open the map, choose Borrow, and find a station with umbrellas available. Check its opening hours and get walking directions.' },
+  { number: '01', icon: 'map-pin', title: 'Find your shelter.', text: 'Open the map and find a station with umbrellas available. Stations operate 24/7. Tap a station to get walking directions.' },
   { number: '02', icon: 'maximize', title: 'Scan. Borrow. Go.', text: 'Tap Scan to rent, scan the station QR or enter its code, then review the price. Your rental begins when the station confirms you’ve taken the umbrella.' },
-  { number: '03', icon: 'repeat', title: 'Pass it on.', text: 'Switch to Return to find an available slot. Insert the umbrella, wait for lock confirmation, and get your receipt. Any compatible station works.' },
+  { number: '03', icon: 'repeat', title: 'Pass it on.', text: 'While your rental is active, the map shows available return slots automatically. Insert the umbrella, wait for lock confirmation, and get your receipt. Any compatible station works.' },
 ];
 const faqs = [
-  ['How much does it cost?', 'The demo rate is HK$5 for each started hour, capped at HK$30 for each 24-hour period. A 61-minute rental is HK$10. These are example prices, and no money is charged in this frontend.'],
-  ['Do I return it to the same station?', 'No. Return your umbrella to any online, open station with a free return slot. Choose Return on the Explore screen to check availability.'],
+  ['How much does it cost?', 'The first 24 hours are free. Extra reward minutes extend that free time. After free time runs out, the demo rate is HK$5 per started hour, capped at HK$30 per paid 24-hour period. These are example prices, and no money is charged in this frontend.'],
+  ['Do I return it to the same station?', 'No. Return your umbrella to any online station with a free return slot. During an active rental, the map automatically shows return availability.'],
   ['What if a station is full or offline?', 'Choose another station on the map. The app disables returns at full or offline stations. A real-world outage would require station event recovery and customer support; this demo does not release or accept physical umbrellas.'],
-  ['Can I use the app without sharing my location?', 'Yes. Browse the Hong Kong demo area or search by station name, address, or neighbourhood. You can choose to share your location later with the map’s location button.'],
+  ['Can I use the app without sharing my location?', 'Yes. Pan and zoom around the Hong Kong demo map, then tap a station to see its details. You can choose to share your location later with the map’s location button.'],
   ['Are these real rental stations?', 'No. All station inventory, rental transactions, and prices in this preview are simulated. The landmarks are real places in Hong Kong, but the umbrella stations are fictional.'],
 ];
 export default function HowItWorks() {

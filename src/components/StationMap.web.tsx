@@ -9,7 +9,7 @@ import { StationMapProps } from './StationMap.types';
 import { IconButton, T } from './ui';
 import { colors as c } from '../theme';
 
-export default function StationMap({ stations, selectedId, onSelect, location, mode, centerRequest, onLocate, locating, controlsTop = 16, bottomInset = 40 }: StationMapProps) {
+export default function StationMap({ rewardMinutes, stations, selectedId, onSelect, location, mode, centerRequest, onLocate, locating, controlsTop = 16, bottomInset = 40 }: StationMapProps) {
   const element = useRef<HTMLDivElement>(null); const map = useRef<L.Map | null>(null); const markers = useRef<L.LayerGroup | null>(null); const user = useRef<L.LayerGroup | null>(null);
   const select = useRef(onSelect);
   useEffect(() => { select.current = onSelect; }, [onSelect]);
@@ -33,12 +33,13 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
   useEffect(() => {
     const layer = markers.current; if (!layer) return; layer.clearLayers();
     stations.forEach(station => {
+      const reward = rewardMinutes?.[station.id] || 0;
       const selected = station.id === selectedId; const available = canUseStation(station, mode);
-      const html = `<div class="station-marker ${selected ? 'selected' : ''} ${available ? '' : 'unavailable'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12a10 10 0 0 1 20 0H2Z"/><path d="M12 12v7a3 3 0 0 0 6 0"/></svg><span>${stationCount(station, mode)}</span></div>`;
-      const marker = L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [62, 43], iconAnchor: [31, 43] }), title: `${station.name}: ${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'}`, keyboard: true, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
+      const html = `<div class="station-marker ${selected ? 'selected' : ''} ${available ? '' : 'unavailable'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12a10 10 0 0 1 20 0H2Z"/><path d="M12 12v7a3 3 0 0 0 6 0"/></svg><span>${stationCount(station, mode)}</span>${reward > 0 ? `<span style="font-size:11px;white-space:nowrap">+${reward} min</span>` : ''}</div>`;
+      const marker = L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [reward > 0 ? 125 : 62, 43], iconAnchor: [reward > 0 ? 62 : 31, 43] }), title: `${station.name}: ${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'}${reward > 0 ? `; currently earns ${reward} free minutes` : ''}`, keyboard: true, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
       marker.bindTooltip(station.name, { direction: 'top', offset: [0, -40], className: 'station-tooltip' });
     });
-  }, [stations, selectedId, mode]);
+  }, [stations, selectedId, mode, rewardMinutes]);
   useEffect(() => {
     const selected = stations.find(s => s.id === selectedId); const instance = map.current;
     if (!selected || !instance) return;
@@ -54,6 +55,6 @@ export default function StationMap({ stations, selectedId, onSelect, location, m
   return <View style={{ flex: 1, backgroundColor: '#E8EDE3', position: 'relative', minHeight: 280 }}>
     <div ref={element} aria-label="Map of demo umbrella stations in Hong Kong" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
     <View style={{ position: 'absolute', right: 14, top: controlsTop, gap: 7 }}><IconButton icon="plus" label="Zoom in" onPress={() => map.current?.zoomIn()} /><IconButton icon="minus" label="Zoom out" onPress={() => map.current?.zoomOut()} /><IconButton icon="navigation" label={locating ? 'Finding your location' : 'Show my location'} onPress={onLocate} /><IconButton icon="maximize" label="Show all demo stations" onPress={() => { if (stations.length) map.current?.fitBounds(stations.map(s => [s.latitude, s.longitude] as L.LatLngTuple), { paddingTopLeft: [70, controlsTop], paddingBottomRight: [70, bottomInset] }); else map.current?.setView([DEMO_CENTER.latitude, DEMO_CENTER.longitude], 15); }} /></View>
-    {mapError && <View style={{ position: 'absolute', bottom: 24, left: 14, right: 65, backgroundColor: c.paper, borderRadius: 8, padding: 10 }}><T style={{ fontSize: 12 }}>Map tiles are unavailable. You can still choose a station from the list.</T></View>}
+    {mapError && <View style={{ position: 'absolute', bottom: 24, left: 14, right: 65, backgroundColor: c.paper, borderRadius: 8, padding: 10 }}><T style={{ fontSize: 12 }}>Map tiles are unavailable. Station markers are still available. Tap a marker to see its details.</T></View>}
   </View>;
 }

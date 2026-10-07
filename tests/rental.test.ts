@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { priceForDuration, distanceMeters, isOpen, canUseStation, stationCount, parseStationCode, elapsedLabel } from '../src/lib/rental';
+import { priceForDuration, distanceMeters, canUseStation, stationCount, parseStationCode, elapsedLabel } from '../src/lib/rental';
 import { DEMO_STATIONS } from '../src/data/stations';
 
 test('hourly price rounds started hours and caps each 24-hour period', () => {
@@ -14,23 +14,21 @@ test('hourly price rounds started hours and caps each 24-hour period', () => {
   assert.equal(priceForDuration(24 * 3600000 + 1), 35);
   assert.equal(priceForDuration(48 * 3600000), 60);
 });
-test('station hours use Hong Kong time and handle closing after midnight', () => {
-  assert.equal(isOpen(DEMO_STATIONS[0], new Date('2026-09-26T04:00:00Z')), true);
-  assert.equal(isOpen(DEMO_STATIONS[0], new Date('2026-09-26T16:00:00Z')), false);
-  assert.equal(isOpen(DEMO_STATIONS[1], new Date('2026-09-26T16:15:00Z')), true);
-  assert.equal(isOpen(DEMO_STATIONS[1], new Date('2026-09-26T16:30:00Z')), false);
-  assert.equal(isOpen(DEMO_STATIONS[5], new Date('2026-09-26T19:00:00Z')), true);
+test('legacy station closing times do not restrict 24/7 borrowing or returns', () => {
+  const station = { ...DEMO_STATIONS[0], hours: '00:00–00:01' };
+  assert.equal(canUseStation(station, 'borrow'), true);
+  assert.equal(canUseStation(station, 'return'), true);
+  assert.equal(canUseStation({ ...station, status: 'offline' }, 'return'), false);
 });
 test('borrow and return eligibility reflect inventory, capacity, and online status', () => {
-  const midday = new Date('2026-09-26T04:00:00Z');
   const station = DEMO_STATIONS[0];
   assert.equal(stationCount(station, 'return'), 4);
-  assert.equal(canUseStation(station, 'borrow', midday), true);
-  assert.equal(canUseStation({ ...station, available: 0 }, 'borrow', midday), false);
-  assert.equal(canUseStation({ ...station, available: 0 }, 'return', midday), true);
-  assert.equal(canUseStation({ ...station, available: station.capacity }, 'return', midday), false);
-  assert.equal(canUseStation({ ...station, status: 'offline' }, 'borrow', midday), false);
-  assert.equal(canUseStation({ ...station, status: 'offline' }, 'return', midday), false);
+  assert.equal(canUseStation(station, 'borrow'), true);
+  assert.equal(canUseStation({ ...station, available: 0 }, 'borrow'), false);
+  assert.equal(canUseStation({ ...station, available: 0 }, 'return'), true);
+  assert.equal(canUseStation({ ...station, available: station.capacity }, 'return'), false);
+  assert.equal(canUseStation({ ...station, status: 'offline' }, 'borrow'), false);
+  assert.equal(canUseStation({ ...station, status: 'offline' }, 'return'), false);
 });
 test('QR parsing accepts station codes and station URLs but rejects unrelated text', () => {
   assert.equal(parseStationCode('RB-001'), 'RB-001');

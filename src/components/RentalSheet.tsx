@@ -3,6 +3,8 @@ import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, TextInput, us
 import { router } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import { Button, Icon, IconButton, Pill, s, T, UmbrellaArt } from './ui';
+import { RewardEstimate } from './Rewards';
+import { formatMinutes, MINUTE, rewardBalance, rewardDate } from '../lib/rewards';
 import { colors as c, fonts as f } from '../theme';
 
 export function RentalSheet() {
@@ -24,11 +26,11 @@ function RentalDialog() {
   }, [setSheet]);
   function start() {
     if (!station) return;
-    try { app.startRental(station.id, name); close(); router.replace('/rentals'); } catch (e) { setError(e instanceof Error ? e.message : 'Please try again.'); }
+    try { app.startRental(station.id, name); close(); app.setSelectedStationId(null); router.replace('/'); } catch (e) { setError(e instanceof Error ? e.message : 'Please try again.'); }
   }
   function finish() {
-    if (!station || !confirmed) return;
-    try { const receipt = app.returnRental(station.id); app.setSheet({ kind: 'receipt', receipt }); } catch (e) { setError(e instanceof Error ? e.message : 'Please try again.'); }
+    if (!station || !confirmed || !app.rental) return;
+    try { const receipt = app.returnRental(station.id, app.rental.id); app.setSheet({ kind: 'receipt', receipt }); } catch (e) { setError(e instanceof Error ? e.message : 'Please try again.'); }
   }
 
   if (!sheet) return null;
@@ -36,15 +38,16 @@ function RentalDialog() {
     <View style={s.between}><Pill tone="orange">DEMO EXPERIENCE</Pill><IconButton icon="x" label="Close rental dialog" onPress={close} /></View>
     {sheet.kind === 'receipt' && sheet.receipt ? <>
       <View style={{ alignItems: 'center', gap: 12 }}><View style={styles.success}><Icon name="check" color={c.green} size={32} /></View><T style={[s.title, { fontSize: 32 }]}>All returned. All good.</T><T style={[s.muted, { textAlign: 'center' }]}>Your umbrella is ready for its next adventure.</T></View>
-      <View style={styles.summary}><Summary label="Borrowed from" value={sheet.receipt.stationName} /><Summary label="Returned to" value={sheet.receipt.returnStationName || ''} /><Summary label="Umbrella" value={sheet.receipt.umbrellaId} /><Summary label="Rental duration" value={`${Math.max(1, Math.ceil(((sheet.receipt.returnedAt || 0) - sheet.receipt.startedAt) / 60000))} min`} /><View style={styles.rule} /><Summary label="Demo total" value={`HK$${sheet.receipt.amount || 0}.00`} /></View><T style={{ textAlign: 'center', fontSize: 12, color: c.muted }}>No payment was taken. Your receipt is saved in My rentals.</T><Button title="View my rentals" onPress={() => { close(); router.replace('/rentals'); }} />
+      {!!sheet.receipt.rewardMinutesEarned && <View style={styles.summary}><T style={{ fontFamily: f.bold, fontSize: 18 }}>Umbrella returned! You earned {sheet.receipt.rewardMinutesEarned} extra free minutes.</T><T style={s.muted}>Use them on future rentals. Expires {rewardDate(sheet.receipt.rewardExpiresAt!)}.</T><T>{formatMinutes(rewardBalance(app.credits, app.now))} free minutes available now</T></View>}
+      <View style={styles.summary}><Summary label="Extra free time used" value={`${formatMinutes((sheet.receipt.rewardMsUsed || 0) / MINUTE)} min`} /><Summary label="Borrowed from" value={sheet.receipt.stationName} /><Summary label="Returned to" value={sheet.receipt.returnStationName || ''} /><Summary label="Umbrella" value={sheet.receipt.umbrellaId} /><Summary label="Rental duration" value={`${Math.max(1, Math.ceil(((sheet.receipt.returnedAt || 0) - sheet.receipt.startedAt) / 60000))} min`} /><View style={styles.rule} /><Summary label="Demo total" value={`HK$${sheet.receipt.amount || 0}.00`} /></View><T style={{ textAlign: 'center', fontSize: 12, color: c.muted }}>No payment was taken. Your receipt is saved in My rentals.</T><Button title="View my rentals" onPress={() => { close(); router.replace('/rentals'); }} />
     </> : sheet.kind === 'return' && station ? <>
-      <T style={[s.title, { fontSize: 32 }]}>A good place to return.</T><T style={s.muted}>{station.name} · {station.capacity - station.available} free slots</T><View style={{ alignItems: 'center' }}><UmbrellaArt width={150} height={130} /></View>
+      <T style={[s.title, { fontSize: 32 }]}>A good place to return.</T><T style={s.muted}>{station.name} · {station.capacity - station.available} free slots</T><RewardEstimate station={station} details /><View style={{ alignItems: 'center' }}><UmbrellaArt width={150} height={130} /></View>
       {[['1', 'Find an empty slot', station.landmark], ['2', 'Insert the umbrella', 'Push the handle in until the lock clicks.'], ['3', 'Wait for confirmation', 'Your rental ends when the station confirms the lock.']].map(([n, title, text]) => <View key={n} style={[s.row, { alignItems: 'flex-start' }]}><View style={styles.number}><T style={{ fontFamily: f.bold }}>{n}</T></View><View style={{ flex: 1, gap: 4 }}><T style={{ fontFamily: f.semibold }}>{title}</T><T style={{ fontSize: 12, color: c.muted, lineHeight: 18 }}>{text}</T></View></View>)}
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: confirmed }} onPress={() => setConfirmed(!confirmed)} style={[s.row, { paddingVertical: 8 }]}><View style={[styles.checkbox, confirmed && { backgroundColor: c.green, borderColor: c.green }]}>{confirmed && <Icon name="check" size={14} color="white" />}</View><T style={{ flex: 1, fontSize: 12, lineHeight: 18 }}>Simulate the umbrella being securely locked into the station.</T></Pressable><Button title="Confirm demo return" disabled={!confirmed} onPress={finish} icon="check" />
     </> : sheet.kind === 'borrow' && station ? <>
       <View style={{ gap: 5 }}><T style={s.label}>REVIEW YOUR RENTAL</T><T style={[s.title, { fontSize: 32 }]}>Let’s get you covered.</T><T style={s.muted}>{station.name} · {station.available} umbrellas available</T></View>
-      <View style={styles.summary}><Summary label="Rental price" value="HK$5 / started hour" /><Summary label="Daily maximum" value="HK$30 / 24 hours" /><Summary label="Return location" value="Any available station" /><View style={styles.rule} /><View style={s.row}><Icon name="credit-card" color={c.green} /><View style={{ flex: 1 }}><T style={{ fontFamily: f.semibold }}>Demo payment method</T><T style={{ color: c.muted, fontSize: 11, marginTop: 4 }}>No card details needed. No real charge.</T></View></View></View>
-      <View style={{ gap: 8 }}><T style={{ fontFamily: f.semibold, fontSize: 12 }}>What should we call you?</T><TextInput accessibilityLabel="Your name" style={s.input} placeholder="Your first name" placeholderTextColor={c.muted} value={name} onChangeText={setName} maxLength={40} autoComplete="given-name" /></View><T style={{ color: c.muted, fontSize: 11, lineHeight: 17 }}>This creates a local demo profile, not a signed-in account. Billing starts only after the simulated umbrella removal.</T><Button title="Simulate unlock" icon="unlock" onPress={start} />
+      <View style={styles.summary}><Summary label="Extra free minutes available" value={`${formatMinutes(rewardBalance(app.credits, app.now))} min · applied automatically`} /><Summary label="Free rental" value="First 24 hours" /><Summary label="After free time" value="HK$5 / started hour" /><Summary label="Daily maximum" value="HK$30 / 24 hours" /><Summary label="Return location" value="Any available station" /><View style={styles.rule} /><View style={s.row}><Icon name="credit-card" color={c.green} /><View style={{ flex: 1 }}><T style={{ fontFamily: f.semibold }}>Demo payment method</T><T style={{ color: c.muted, fontSize: 11, marginTop: 4 }}>No card details needed. No real charge.</T></View></View></View>
+      <View style={{ gap: 8 }}><T style={{ fontFamily: f.semibold, fontSize: 12 }}>What should we call you?</T><TextInput accessibilityLabel="Your name" style={s.input} placeholder="Your first name" placeholderTextColor={c.muted} value={name} onChangeText={setName} maxLength={40} autoComplete="given-name" /></View><T style={{ color: c.muted, fontSize: 11, lineHeight: 17 }}>This creates a local demo profile, not a signed-in account. Your 24 free hours start after the simulated umbrella removal. Extra reward minutes extend free time before charges begin.</T><Button title="Simulate unlock" icon="unlock" onPress={start} />
     </> : null}
     {error ? <T accessibilityRole="alert" style={{ color: c.red, fontSize: 12, lineHeight: 18 }}>{error}</T> : null}
   </ScrollView></View></View>;

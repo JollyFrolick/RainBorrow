@@ -1,19 +1,20 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors as c, fonts as f } from '../theme';
 import { Icon, Pill, s, T } from './ui';
 
 /** Scrolling content for secondary screens. Navigation lives in the root layout. */
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { width } = useWindowDimensions();
+  const { width } = useWindowDimensions(); const insets = useSafeAreaInsets();
   return <View style={styles.root}>
     <View style={[styles.header, { paddingHorizontal: width < 760 ? 18 : 32 }]}>
       <Pressable accessibilityRole="link" accessibilityLabel="Back to map" onPress={() => router.replace('/')} style={s.row}>
         <Icon name="arrow-left" size={20} /><T style={{ fontFamily: f.semibold }}>Back to map</T>
       </Pressable><Pill tone="orange">DEMO</Pill>
     </View>
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: width < 760 ? 18 : 32, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: width < 760 ? 18 : 32, paddingBottom: 108 + Math.max(insets.bottom, 8) }} keyboardShouldPersistTaps="handled">
       <View style={{ width: '100%', maxWidth: 1080, alignSelf: 'center' }}>{children}</View>
     </ScrollView>
   </View>;

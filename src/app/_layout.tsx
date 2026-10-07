@@ -28,7 +28,7 @@ function Content() {
   if (!ready) return <LoadingScreen />;
   return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: colors.cream }}>
     {storageError && <View style={{ backgroundColor: colors.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
-    <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <View style={{ flex: 1, minHeight: 0, overflow: 'hidden', marginBottom: sheet ? 76 + Math.max(insets.bottom, 8) : 0 }}>
       <View style={{ flex: 1 }} pointerEvents={sheet ? 'none' : 'auto'} aria-hidden={!!sheet} importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}>
         <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: colors.cream } }}>
           <Stack.Screen name="index" options={{ title: 'Map · RainBorrow' }} />

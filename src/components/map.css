@@ -2,7 +2,7 @@
 .leaflet-tile-pane{filter:saturate(.22) brightness(1.025)}
 .station-pin{background:none!important;border:0!important}
 .station-marker{display:flex;gap:7px;align-items:center;justify-content:center;height:37px;min-width:54px;padding:0 5px;border-radius:11px;background:#fff;color:#245b49;box-shadow:0 3px 12px #193d3526;border:1px solid #c7d5c5;font-family:'DMSans_700Bold',sans-serif;font-size:14px;transition:transform .18s,background .18s}
-.station-marker:after{content:'';position:absolute;bottom:2px;left:26px;width:9px;height:9px;transform:rotate(45deg);background:inherit;border-right:1px solid #c7d5c5;border-bottom:1px solid #c7d5c5}
+.station-marker:after{content:'';position:absolute;bottom:2px;left:calc(50% - 5px);width:9px;height:9px;transform:rotate(45deg);background:inherit;border-right:1px solid #c7d5c5;border-bottom:1px solid #c7d5c5}
 .station-marker.selected{background:#245b49;color:#fff;border-color:#245b49;transform:scale(1.12)}
 .station-marker.selected:after{border-color:#245b49}
 .station-marker.unavailable{color:#92998e;background:#edf0e8}
