@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Image, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
@@ -25,8 +25,9 @@ function LoadingScreen() {
 function Content() {
   const { ready, storageError, sheet } = useApp();
   const insets = useSafeAreaInsets();
+  const isMap = usePathname() === '/';
   if (!ready) return <LoadingScreen />;
-  return <View style={{ flex: 1, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: colors.cream }}>
+  return <View style={{ flex: 1, paddingTop: isMap ? 0 : insets.top, paddingLeft: insets.left, paddingRight: insets.right, backgroundColor: colors.cream }}>
     {storageError && <View style={{ backgroundColor: colors.orangeLight, padding: 8 }}><T style={{ textAlign: 'center', fontSize: 12 }}>Device storage is unavailable. Demo progress may not survive a refresh.</T></View>}
     <View style={{ flex: 1, minHeight: 0, overflow: 'hidden', marginBottom: sheet ? 76 + Math.max(insets.bottom, 8) : 0 }}>
       <View style={{ flex: 1 }} pointerEvents={sheet ? 'none' : 'auto'} aria-hidden={!!sheet} importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}>
@@ -36,7 +37,6 @@ function Content() {
           <Stack.Screen name="rentals" options={{ title: 'My rentals · RainBorrow' }} />
           <Stack.Screen name="how-it-works" options={{ title: 'How it works · RainBorrow' }} />
           <Stack.Screen name="account" options={{ title: 'Profile · RainBorrow' }} />
-          <Stack.Screen name="weather-mode" options={{ title: 'Weather mode · RainBorrow' }} />
         </Stack>
       </View>
       <RentalSheet />

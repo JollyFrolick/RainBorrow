@@ -13,12 +13,10 @@ For a phone, run `npm start` and open the project with a compatible Expo Go vers
 
 ## Navigation
 
-The app opens directly to a full-screen station map. There is no landing page. The bottom navigation uses floating icons with individual white circles around the four outer buttons, without a background bar or visible labels. Accessible labels identify each action. It stays visible on desktop and mobile, including during rental checkout and return dialogs:
+The app opens directly to a full-screen station map. There is no landing page. The bottom navigation uses floating icons with individual white circles around the two outer buttons, without a background bar or visible labels. Accessible labels identify each action. It stays visible on desktop and mobile, including during rental checkout and return dialogs:
 
 - **Map** returns to the station map.
-- **Weather news** opens the Hong Kong Observatory in a separate browser tab on web, or the browser on native.
 - **Scan to rent** sits in the center and opens the station scanner/code entry. Selecting a map station changes its action to **View rental** while retaining the original scan icon, opening that station’s borrowing review; with an active rental, it opens My rentals. Unavailable stations cannot start a new rental. Closing station details restores the scan action when no rental is active.
-- **Weather mode** opens a “Coming soon” placeholder; no weather behavior is implemented.
 - **Profile** includes profile details, rental history/receipts, payment preview, help, and local support notes.
 
 ## Try the full journey
@@ -40,7 +38,7 @@ Names, saved stations, rentals, and support notes persist using AsyncStorage on 
 
 ## Structure
 
-- `src/app/`: Expo Router screens (Map, Scan to rent, Profile, My rentals, How it works, Weather mode placeholder).
+- `src/app/`: Expo Router screens (Map, Scan to rent, Profile, My rentals, How it works).
 - `src/components/`: UI, persistent bottom navigation, secondary-screen shell, rental dialogs, native and browser map adapters.
 - `src/context/AppContext.tsx`: local demo data and rental transitions; replace this boundary with backend API calls.
 - `src/data/stations.ts`: clearly identified fictional inventory.
@@ -62,7 +60,7 @@ Before real rentals: connect authentication, authoritative station inventory, id
 
 ## Dynamic Return Rewards (local demo)
 
-Return-mode map markers and station details show current reward estimates. A return to a different station earns 30 minutes at 0–20% supply or 15 minutes above 20–40%, capped at 60 minutes per Hong Kong calendar day. No reward offers are locked or reserved. Availability is recalculated before the simulated return changes inventory. The profile contains the balance, earnings, usage, and expirations; receipts show actual earned and redeemed time.
+Map markers use 🟢 with available umbrella counts before borrowing and ⭕ with free return-slot counts during a rental. Return markers use red for the highest reward, yellow for a smaller reward, and white for no reward, with a visible legend and accessible text. Exact reward estimates remain in station details; markers show no reward numbers. A return to a different station earns 30 minutes at 0–20% supply or 15 minutes above 20–40%, capped at 60 minutes per Hong Kong calendar day. No reward offers are locked or reserved. Availability is recalculated before the simulated return changes inventory. The profile contains the balance, earnings, usage, and expirations; receipts show actual earned and redeemed time.
 
 Settings live in `src/lib/rewards.ts` (`REWARD_CONFIG`). Operational capacity and usable inventory are represented by `capacity` and `available`; all empty slots in the demo are assumed operational. The normal free allowance is 24 hours. The active-rental banner counts down the free period each second using the persisted rental start time, including eligible reward extensions. Successful simulated unlock returns to the map and displays this banner. Credits expire exactly 30 days after earning. Exact elapsed milliseconds are consumed earliest-expiry-first, only for time before each credit expires; the existing started-hour rounding and daily price cap apply to the remaining duration. Credits earned by a return cannot pay for that rental. Only one rental can be active in the local profile. Active-rental usage is projected until return and then settled together with inventory and the new reward in one local state update.
 

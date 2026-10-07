@@ -9,13 +9,15 @@ import { colors as c, fonts as f } from '../theme';
 import { canUseStation, distanceMeters, formatDistance, stationCount } from '../lib/rental';
 import { ActiveRentalBanner } from '../components/ActiveRentalBanner';
 import { RewardEstimate, REWARD_NOTICE } from '../components/Rewards';
-import { rewardEstimate } from '../lib/rewards';
+import { rewardMarker, stationSymbol } from '../lib/stationMarker';
+import { REWARD_CONFIG, rewardEstimate } from '../lib/rewards';
 import type { Station } from '../data/stations';
 
 export default function MapScreen() {
   const app = useApp(); const { width, height } = useWindowDimensions(); const mobile = width < 760;
   const selectedId = app.selectedStationId; const setSelected = app.setSelectedStationId;
-  const navigationInset = 76 + Math.max(useSafeAreaInsets().bottom, 8);
+  const insets = useSafeAreaInsets();
+  const navigationInset = 76 + Math.max(insets.bottom, 8);
   const [centerRequest, setCenterRequest] = useState(0);
   const [directionsError, setDirectionsError] = useState('');
   const stations = app.stations;
@@ -31,14 +33,14 @@ export default function MapScreen() {
     catch { setDirectionsError('Directions could not open. Try your maps app with the address above.'); }
   }
   return <View style={styles.root}>
-    <StationMap rewardMinutes={rewardMinutes} stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={mobile ? (app.rental ? 175 : 22) : 22} bottomInset={(mobile && selected ? 400 : 40) + navigationInset} />
-    <View pointerEvents="box-none" style={[styles.top, { right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
+    <StationMap rewardMinutes={rewardMinutes} stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={insets.top + (mobile && app.rental ? 175 : 22)} bottomInset={(mobile && selected ? 400 : 40) + navigationInset} />
+    <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 16, right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
       {app.rental && <ActiveRentalBanner rental={app.rental} credits={app.credits} />}
       {app.rental && app.mode === 'return' && <View style={styles.notice}><T style={{ fontSize: 11, lineHeight: 16 }}>{REWARD_NOTICE}</T></View>}
       {(app.locationError || app.locationLoading) && <View style={styles.notice}><T accessibilityRole="alert" style={{ fontSize: 12, lineHeight: 18 }}>{app.locationLoading ? 'Finding your current location…' : app.locationError}</T></View>}
     </View>
     <View pointerEvents="box-none" style={[styles.bottom, { bottom: navigationInset + 12, right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
-      {selected ? <View style={[styles.details, { maxHeight: Math.max(190, height - navigationInset - (app.mode === 'return' && app.rental ? 295 : 195)) }]}>
+      {selected ? <View style={[styles.details, { maxHeight: Math.max(190, height - insets.top - navigationInset - (app.mode === 'return' && app.rental ? 350 : 230)) }]}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 18, gap: 13 }}>
           <View style={s.between}><View style={{ flex: 1, gap: 4 }}><T style={styles.eyebrow}>{selected.district} · {selected.id}</T><T style={{ fontSize: 21, fontFamily: f.bold }}>{selected.name}</T></View><IconButton icon="x" label="Close station details" onPress={() => setSelected(null)} style={styles.smallButton} /></View>
           <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }}>{selected.landmark}</T>
@@ -49,6 +51,10 @@ export default function MapScreen() {
           {directionsError ? <T style={{ color: c.red, fontSize: 12 }}>{directionsError}</T> : null}
         </ScrollView>
       </View> : <View pointerEvents="none" style={styles.mapHint}><Icon name="map-pin" size={16} /><T style={{ fontSize: 12, fontFamily: f.medium }}>Tap a station to {app.mode === 'borrow' ? 'find an umbrella' : 'find a return slot'}</T></View>}
+      <View pointerEvents="none" style={{ backgroundColor: c.paper, padding: 9, borderRadius: 10, gap: 7 }}>
+        <T style={{ fontSize: 11 }}>{stationSymbol(app.mode)} {app.mode === 'return' ? 'Available return slots' : 'Available umbrellas'}</T>
+        {app.mode === 'return' && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>{[REWARD_CONFIG.criticalMinutes, REWARD_CONFIG.lowMinutes, 0].map(minutes => { const reward = rewardMarker(minutes); return <View key={minutes} style={[s.row, { gap: 5 }]}><View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: reward.color, borderWidth: 1, borderColor: c.muted }} /><T style={{ fontSize: 10 }}>{reward.label}</T></View>; })}</View>}
+      </View>
       <T pointerEvents="none" style={styles.demoNote}>Demo stations · No real rentals or charges</T>
     </View>
   </View>;

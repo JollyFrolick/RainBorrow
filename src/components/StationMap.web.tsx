@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import './map.css';
 import { DEMO_CENTER } from '../data/stations';
 import { canUseStation, stationCount } from '../lib/rental';
+import { rewardMarker, stationSymbol } from '../lib/stationMarker';
 import { StationMapProps } from './StationMap.types';
 import { IconButton, T } from './ui';
 import { colors as c } from '../theme';
@@ -35,8 +36,10 @@ export default function StationMap({ rewardMinutes, stations, selectedId, onSele
     stations.forEach(station => {
       const reward = rewardMinutes?.[station.id] || 0;
       const selected = station.id === selectedId; const available = canUseStation(station, mode);
-      const html = `<div class="station-marker ${selected ? 'selected' : ''} ${available ? '' : 'unavailable'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12a10 10 0 0 1 20 0H2Z"/><path d="M12 12v7a3 3 0 0 0 6 0"/></svg><span>${stationCount(station, mode)}</span>${reward > 0 ? `<span style="font-size:11px;white-space:nowrap">+${reward} min</span>` : ''}</div>`;
-      const marker = L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [reward > 0 ? 125 : 62, 43], iconAnchor: [reward > 0 ? 62 : 31, 43] }), title: `${station.name}: ${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'}${reward > 0 ? `; currently earns ${reward} free minutes` : ''}`, keyboard: true, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
+      const rewardStyle = rewardMarker(reward);
+      const label = `${station.name}: ${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'} available${mode === 'return' ? `; ${rewardStyle.label}` : ''}${available ? '' : '; unavailable'}`;
+      const html = `<div style="background:${mode === 'return' ? rewardStyle.color : '#FFFFFF'}" class="station-marker ${selected ? 'selected' : ''} ${available ? '' : 'unavailable'}"><span aria-hidden="true" style="font-size:17px">${stationSymbol(mode)}</span><span>${stationCount(station, mode)}</span></div>`;
+      const marker = L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [68, 43], iconAnchor: [34, 43] }), title: label, alt: label, keyboard: true, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
       marker.bindTooltip(station.name, { direction: 'top', offset: [0, -40], className: 'station-tooltip' });
     });
   }, [stations, selectedId, mode, rewardMinutes]);
