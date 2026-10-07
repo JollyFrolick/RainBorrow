@@ -3,15 +3,15 @@ import { test } from 'node:test';
 import { priceForDuration, distanceMeters, canUseStation, stationCount, parseStationCode, elapsedLabel } from '../src/lib/rental';
 import { DEMO_STATIONS } from '../src/data/stations';
 
-test('hourly price rounds started hours and caps each 24-hour period', () => {
+test('deductions use completed hours and never exceed the HK$60 deposit', () => {
   assert.equal(priceForDuration(0), 0);
   assert.equal(priceForDuration(-1), 0);
-  assert.equal(priceForDuration(1), 5);
+  assert.equal(priceForDuration(1), 0);
   assert.equal(priceForDuration(3600000), 5);
-  assert.equal(priceForDuration(3600001), 10);
-  assert.equal(priceForDuration(8 * 3600000), 30);
-  assert.equal(priceForDuration(24 * 3600000), 30);
-  assert.equal(priceForDuration(24 * 3600000 + 1), 35);
+  assert.equal(priceForDuration(3600001), 5);
+  assert.equal(priceForDuration(8 * 3600000), 40);
+  assert.equal(priceForDuration(24 * 3600000), 60);
+  assert.equal(priceForDuration(24 * 3600000 + 1), 60);
   assert.equal(priceForDuration(48 * 3600000), 60);
 });
 test('legacy station closing times do not restrict 24/7 borrowing or returns', () => {

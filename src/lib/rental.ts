@@ -1,14 +1,12 @@
 import type { Coordinate, Station } from '../data/stations';
 
-export type Rental = { id: string; umbrellaId: string; stationId: string; stationName: string; startedAt: number; returnedAt?: number; returnStationId?: string; returnStationName?: string; amount?: number; rewardMinutesEarned?: number; rewardMsUsed?: number; rewardExpiresAt?: number };
+export type Rental = { id: string; umbrellaId: string; stationId: string; stationName: string; startedAt: number; depositPaid?: number; refundAmount?: number; ownedAt?: number; status?: 'returned' | 'owned'; returnedAt?: number; returnStationId?: string; returnStationName?: string; amount?: number; rewardMinutesEarned?: number; rewardMsUsed?: number; rewardExpiresAt?: number };
 export type Mode = 'borrow' | 'return';
 export const PRICE_PER_HOUR = 5;
-export const DAILY_CAP = 30;
+export const DEPOSIT = 60;
 export function priceForDuration(milliseconds: number): number {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) return 0;
-  const days = Math.floor(milliseconds / 86400000);
-  const remainder = milliseconds % 86400000;
-  return days * DAILY_CAP + Math.min(Math.ceil(remainder / 3600000) * PRICE_PER_HOUR, DAILY_CAP);
+  return Math.min(Math.floor(milliseconds / 3600000) * PRICE_PER_HOUR, DEPOSIT);
 }
 export function distanceMeters(from: Coordinate, to: Coordinate): number {
   const rad = Math.PI / 180;

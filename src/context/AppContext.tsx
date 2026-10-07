@@ -2,9 +2,9 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Coordinate, DEMO_CENTER, DEMO_STATIONS, Station } from '../data/stations';
-import { canUseStation, Mode, Rental } from '../lib/rental';
+import { canUseStation, DEPOSIT, Mode, Rental } from '../lib/rental';
 
-import { completeDemoReturn, type RewardState, type RewardEvent } from '../lib/rewards';
+import { completeDemoReturn, settleDemoOwnership, type RewardState, type RewardEvent } from '../lib/rewards';
 
 type Stored = RewardState & { name: string; favorites: string[]; reports: { id: string; note: string; createdAt: number }[] };
 type Sheet = { kind: 'borrow' | 'return' | 'receipt'; stationId?: string; receipt?: Rental } | null;
@@ -41,7 +41,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed.stations) || !Array.isArray(parsed.history) || !Array.isArray(parsed.favorites) || !Array.isArray(parsed.reports) || typeof parsed.name !== 'string') throw new Error('Invalid data');
       const migrated: Stored = { ...parsed, credits: parsed.credits || [], rewardEvents: parsed.rewardEvents || [], stockoutSince: parsed.stockoutSince || Object.fromEntries(parsed.stations.filter((s: Station) => s.available === 0).map((s: Station) => [s.id, Date.now()])) };
-      if (mounted) { ref.current = migrated; setState(migrated); }
+      if (mounted) { const settled = settleDemoOwnership(migrated, Date.now()); ref.current = settled; setState(settled); if (settled !== migrated) writeQueue.current = writeQueue.current.then(() => AsyncStorage.setItem(KEY, JSON.stringify(settled))).catch(() => setStorageError(true)); }
     }).catch(() => { if (mounted) setStorageError(true); }).finally(() => { if (mounted) setReady(true); });
     return () => { mounted = false; };
   }, []);
@@ -49,6 +49,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ref.current = next; setState(next); setNow(Date.now());
     writeQueue.current = writeQueue.current.then(() => AsyncStorage.setItem(KEY, JSON.stringify(next))).catch(() => setStorageError(true));
   }
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setInterval(() => {
+      const current = ref.current;
+      const settled = settleDemoOwnership(current, Date.now());
+      if (settled !== current) {
+        ref.current = settled; setState(settled); setNow(Date.now());
+        setSheet({ kind: 'receipt', receipt: settled.history[0] });
+        writeQueue.current = writeQueue.current.then(() => AsyncStorage.setItem(KEY, JSON.stringify(settled))).catch(() => setStorageError(true));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [ready]);
   async function getLocation() {
     setLocationLoading(true); setLocationError(null);
     try {
@@ -63,12 +76,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     finally { setLocationLoading(false); }
   }
   function startRental(id: string, name: string) {
-    const current = ref.current;
+    const current = settleDemoOwnership(ref.current, Date.now());
     if (!ready) throw new Error('Your saved rentals are still loading.');
     if (current.rental) throw new Error('You already have an umbrella. Return it before borrowing another.');
     const station = current.stations.find(s => s.id === id);
     if (!station || !canUseStation(station, 'borrow')) throw new Error('This station is no longer available. Please choose another.');
-    const rental: Rental = { id: `RB${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, umbrellaId: `U-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, stationId: id, stationName: station.name, startedAt: Date.now() };
+    const rental: Rental = { id: `RB${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, umbrellaId: `U-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, stationId: id, stationName: station.name, startedAt: Date.now(), depositPaid: DEPOSIT };
     update({ ...current, stockoutSince: station.available === 1 ? { ...current.stockoutSince, [id]: rental.startedAt } : current.stockoutSince, name: name.trim() || 'Rain explorer', rental, stations: current.stations.map(s => s.id === id ? { ...s, available: s.available - 1 } : s) });
     return rental;
   }

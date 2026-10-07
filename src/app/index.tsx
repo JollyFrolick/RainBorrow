@@ -33,8 +33,9 @@ export default function MapScreen() {
     catch { setDirectionsError('Directions could not open. Try your maps app with the address above.'); }
   }
   return <View style={styles.root}>
-    <StationMap rewardMinutes={rewardMinutes} stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={insets.top + (mobile && app.rental ? 175 : 22)} bottomInset={(mobile && selected ? 400 : 40) + navigationInset} />
+    <StationMap rewardMinutes={rewardMinutes} stations={stations} selectedId={selected?.id || null} onSelect={choose} location={app.location} mode={app.mode} centerRequest={centerRequest} onLocate={locate} locating={app.locationLoading} controlsTop={insets.top + (mobile && (app.rental || app.history[0]?.status === 'owned') ? 175 : 22)} bottomInset={(mobile && selected ? 400 : 40) + navigationInset} />
     <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 16, right: mobile ? 14 : undefined, width: mobile ? undefined : 390 }]}>
+      {!app.rental && app.history[0]?.status === 'owned' && <View style={styles.notice}><T style={{ fontFamily: f.semibold }}>Your umbrella is yours to keep.</T><T style={{ fontSize: 12, lineHeight: 18, marginVertical: 6 }}>Your HK$60 deposit is fully used. No further deductions or return required.</T><Button secondary title="View ownership receipt" onPress={() => app.setSheet({ kind: 'receipt', receipt: app.history[0] })} /></View>}
       {app.rental && <ActiveRentalBanner rental={app.rental} credits={app.credits} />}
       {app.rental && app.mode === 'return' && <View style={styles.notice}><T style={{ fontSize: 11, lineHeight: 16 }}>{REWARD_NOTICE}</T></View>}
       {(app.locationError || app.locationLoading) && <View style={styles.notice}><T accessibilityRole="alert" style={{ fontSize: 12, lineHeight: 18 }}>{app.locationLoading ? 'Finding your current location…' : app.locationError}</T></View>}

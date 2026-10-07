@@ -37,6 +37,6 @@ export function RewardsCard() {
       <T style={{ fontSize: 11, color: c.muted }}>Earned {rewardDate(credit.earnedAt)} · {formatMinutes(credit.earnedMinutes - credit.remainingMs / MINUTE)} minutes used</T>
       <T style={{ fontSize: 11, color: c.muted }}>{credit.remainingMs === 0 ? 'Fully used' : credit.expiresAt <= app.now ? `${formatMinutes(credit.remainingMs / MINUTE)} unused minutes expired ${rewardDate(credit.expiresAt)}` : `${formatMinutes(credit.remainingMs / MINUTE)} minutes remaining · Expires ${rewardDate(credit.expiresAt)}`}</T>
     </View>)}
-    {app.history.filter(r => r.rewardMsUsed).map(r => <T key={r.id} style={{ fontSize: 11, color: c.muted }}>Used {formatMinutes((r.rewardMsUsed || 0) / MINUTE)} minutes · Rental from {r.stationName} · {rewardDate(r.returnedAt!)}</T>)}
+    {app.history.filter(r => r.rewardMsUsed).map(r => <T key={r.id} style={{ fontSize: 11, color: c.muted }}>Used {formatMinutes((r.rewardMsUsed || 0) / MINUTE)} minutes · Rental from {r.stationName} · {rewardDate((r.returnedAt || r.ownedAt)!)}</T>)}
   </View>;
 }

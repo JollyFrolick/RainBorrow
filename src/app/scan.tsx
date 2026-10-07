@@ -41,7 +41,7 @@ export default function Scan() {
       <View style={{ gap: 9 }}><T style={{ fontFamily: f.semibold, fontSize: 13 }}>Station code</T><TextInput accessibilityLabel="Station code" style={[s.input, { backgroundColor: c.paper, fontFamily: f.bold, letterSpacing: 2 }]} placeholder="e.g. RB-001" placeholderTextColor={c.muted} value={code} onChangeText={value => { setCode(value); setError(''); }} maxLength={20} autoCapitalize="characters" autoCorrect={false} onSubmitEditing={() => scan(code)} /><Button title="Review rental" icon="arrow-right" disabled={!code.trim()} onPress={() => scan(code)} /></View>
       {error && <T accessibilityRole="alert" style={{ color: c.red, fontSize: 12, lineHeight: 18 }}>{error}</T>}
       {example && <Button secondary title={`Try demo station · ${example.id}`} onPress={() => scan(example.id)} />}
-      <T style={{ fontSize: 11, color: c.muted, lineHeight: 18, textAlign: 'center' }}>First 24 hours free, then HK$5 per started hour · HK$30 maximum per paid 24 hours.{ '\n' }Review the price before unlocking. No real charges in this demo.</T>
+      <T style={{ fontSize: 11, color: c.muted, lineHeight: 18, textAlign: 'center' }}>HK$60 deposit · First 24 hours free · Then HK$5 per completed hour from your deposit. When it is used up, the umbrella is yours.{ '\n' }Review the price before unlocking. No real charges in this demo.</T>
     </>}
   </View></Shell>;
 }
