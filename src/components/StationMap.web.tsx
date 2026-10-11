@@ -39,17 +39,9 @@ export default function StationMap({ rewardMinutes, stations, selectedId, onSele
       const rewardStyle = rewardMarker(reward);
       const label = `${station.name}: ${stationCount(station, mode)} ${mode === 'borrow' ? 'umbrellas' : 'return slots'} available${mode === 'return' ? `; ${rewardStyle.label}` : ''}${available ? '' : '; unavailable'}`;
       const html = `<div style="background:${mode === 'return' ? rewardStyle.color : '#FFFFFF'}" class="station-marker ${selected ? 'selected' : ''} ${available ? '' : 'unavailable'}"><span aria-hidden="true" style="font-size:17px">${stationSymbol(mode)}</span><span>${stationCount(station, mode)}</span></div>`;
-      const marker = L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [68, 43], iconAnchor: [34, 43] }), title: label, alt: label, keyboard: true, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
-      marker.bindTooltip(station.name, { direction: 'top', offset: [0, -40], className: 'station-tooltip' });
+      L.marker([station.latitude, station.longitude], { icon: L.divIcon({ html, className: 'station-pin', iconSize: [68, 43], iconAnchor: [34, 43] }), alt: label, keyboard: true, autoPanOnFocus: false, zIndexOffset: selected ? 1000 : 0 }).on('click', () => select.current(station.id)).addTo(layer);
     });
   }, [stations, selectedId, mode, rewardMinutes]);
-  useEffect(() => {
-    const selected = stations.find(s => s.id === selectedId); const instance = map.current;
-    if (!selected || !instance) return;
-    const point = instance.project([selected.latitude, selected.longitude], instance.getZoom());
-    const offset = Math.max(0, bottomInset - controlsTop) / 2;
-    instance.panTo(instance.unproject(point.add([0, offset]), instance.getZoom()), { animate: true });
-  }, [selectedId, stations, bottomInset, controlsTop]);
   useEffect(() => {
     user.current?.clearLayers(); if (!location || !user.current) return;
     L.circleMarker([location.latitude, location.longitude], { radius: 9, color: 'white', weight: 3, fillColor: '#5484D5', fillOpacity: 1 }).bindTooltip('Your location').addTo(user.current);

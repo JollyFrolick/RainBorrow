@@ -2,16 +2,16 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Coordinate, DEMO_CENTER, DEMO_STATIONS, Station } from '../data/stations';
-import { canUseStation, DEPOSIT, Mode, Rental } from '../lib/rental';
+import { assertRentalCooldownEnded, canUseStation, DEPOSIT, Mode, Rental, rentalCooldownEndsAt } from '../lib/rental';
 
 import { completeDemoReturn, settleDemoOwnership, type RewardState, type RewardEvent } from '../lib/rewards';
 
-type Stored = RewardState & { name: string; favorites: string[]; reports: { id: string; note: string; createdAt: number }[] };
+type Stored = RewardState & { name: string; favorites: string[]; reports: { id: string; note: string; createdAt: number }[]; demoCooldownBypassRentalId?: string };
 type Sheet = { kind: 'borrow' | 'return' | 'receipt'; stationId?: string; receipt?: Rental } | null;
 type AppValue = Stored & {
   ready: boolean; location: Coordinate | null; locationLoading: boolean; locationError: string | null;
   selectedStationId: string | null; setSelectedStationId: (id: string | null) => void;
-  mode: Mode; sheet: Sheet; setSheet: (s: Sheet) => void;
+  mode: Mode; sheet: Sheet; setSheet: (s: Sheet) => void; cooldownRemaining: number; bypassDemoCooldown: () => void;
   getLocation: () => Promise<void>; startRental: (id: string, name: string) => Rental;
   returnRental: (id: string, rentalId: string) => Rental; trackRewardEstimate: (stationId: string, minutes: number) => void; now: number; toggleFavorite: (id: string) => void;
   saveName: (name: string) => void; report: (note: string) => void; storageError: boolean;
@@ -24,6 +24,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Stored>(initial);
   const ref = useRef(state);
   const [now, setNow] = useState(() => Date.now());
+  const cooldownEndsAt = rentalCooldownEndsAt(state.history, state.demoCooldownBypassRentalId);
+  const cooldownRemaining = Math.max(0, cooldownEndsAt - now);
+  useEffect(() => {
+    const remaining = cooldownEndsAt - Date.now();
+    if (remaining <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), remaining);
+    return () => clearTimeout(timer);
+  }, [cooldownEndsAt]);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
   const [ready, setReady] = useState(false);
   const [storageError, setStorageError] = useState(false);
@@ -56,7 +64,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const settled = settleDemoOwnership(current, Date.now());
       if (settled !== current) {
         ref.current = settled; setState(settled); setNow(Date.now());
-        setSheet({ kind: 'receipt', receipt: settled.history[0] });
         writeQueue.current = writeQueue.current.then(() => AsyncStorage.setItem(KEY, JSON.stringify(settled))).catch(() => setStorageError(true));
       }
     }, 1000);
@@ -79,10 +86,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const current = settleDemoOwnership(ref.current, Date.now());
     if (!ready) throw new Error('Your saved rentals are still loading.');
     if (current.rental) throw new Error('You already have an umbrella. Return it before borrowing another.');
+    assertRentalCooldownEnded(current.history, Date.now(), current.demoCooldownBypassRentalId);
     const station = current.stations.find(s => s.id === id);
     if (!station || !canUseStation(station, 'borrow')) throw new Error('This station is no longer available. Please choose another.');
     const rental: Rental = { id: `RB${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, umbrellaId: `U-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, stationId: id, stationName: station.name, startedAt: Date.now(), depositPaid: DEPOSIT };
-    update({ ...current, stockoutSince: station.available === 1 ? { ...current.stockoutSince, [id]: rental.startedAt } : current.stockoutSince, name: name.trim() || 'Rain explorer', rental, stations: current.stations.map(s => s.id === id ? { ...s, available: s.available - 1 } : s) });
+    update({ ...current, demoCooldownBypassRentalId: undefined, stockoutSince: station.available === 1 ? { ...current.stockoutSince, [id]: rental.startedAt } : current.stockoutSince, name: name.trim() || 'Rain explorer', rental, stations: current.stations.map(s => s.id === id ? { ...s, available: s.available - 1 } : s) });
     return rental;
   }
   function returnRental(id: string, rentalId: string) {
@@ -99,7 +107,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const event: RewardEvent = { id, kind: 'estimate_shown', at: Date.now(), stationId, rentalId: cur.rental.id, minutes };
     update({ ...cur, rewardEvents: [...cur.rewardEvents, event] });
   }
-  const value: AppValue = { ...state, now, selectedStationId, setSelectedStationId, trackRewardEstimate, ready, location, locationLoading, locationError, mode, sheet, setSheet, getLocation, startRental, returnRental, storageError,
+  const value: AppValue = { ...state, now, cooldownRemaining, selectedStationId, setSelectedStationId, trackRewardEstimate, ready, location, locationLoading, locationError, mode, sheet, setSheet, getLocation, startRental, returnRental, storageError,
+    bypassDemoCooldown() {
+      const current = ref.current;
+      if (!ready || current.rental) return;
+      const endsAt = rentalCooldownEndsAt(current.history, current.demoCooldownBypassRentalId);
+      if (endsAt <= Date.now()) return;
+      const latest = current.history.find(rental => rentalCooldownEndsAt([rental]) === endsAt);
+      if (latest) update({ ...current, demoCooldownBypassRentalId: latest.id });
+    },
     toggleFavorite(id) { const cur = ref.current; update({ ...cur, favorites: cur.favorites.includes(id) ? cur.favorites.filter(x => x !== id) : [...cur.favorites, id] }); },
     saveName(name) { update({ ...ref.current, name: name.trim() }); },
     report(note) { const cur = ref.current; update({ ...cur, reports: [{ id: `HELP-${Date.now()}`, note, createdAt: Date.now() }, ...cur.reports] }); },

@@ -1,3 +1,4 @@
+import { RentalCooldownNotice } from '../components/RentalCooldownNotice';
 import React, { useEffect, useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
@@ -13,6 +14,7 @@ export default function Rentals() {
   const app = useApp(); const { width } = useWindowDimensions(); const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   return <Shell><T style={s.label}>YOUR SHARED ADVENTURES</T><T style={[s.title, { marginTop: 10 }]}>My rentals</T><T style={[s.muted, { marginTop: 8, marginBottom: 28 }]}>A little shelter, from start to finish.</T>
+    <RentalCooldownNotice />
     {app.rental ? <View style={[s.card, { backgroundColor: c.greenDark, padding: width < 600 ? 24 : 36, gap: 22 }]}>
       <ActiveRentalBanner rental={app.rental} credits={app.credits} /><View style={s.between}><Pill>RENTAL ACTIVE</Pill><T style={{ color: '#ADCCB5', fontSize: 12 }}>{app.rental.umbrellaId}</T></View>
       <View style={s.between}><View><T style={{ fontFamily: f.display, color: 'white', fontSize: width < 600 ? 32 : 44 }}>You’re covered.</T><T style={{ fontFamily: f.medium, fontSize: width < 600 ? 38 : 56, letterSpacing: 2, color: c.lime, marginTop: 15 }}>{elapsedLabel(now - app.rental.startedAt)}</T><T style={{ color: '#ADCCB5', fontSize: 12, marginTop: 8 }}>Elapsed rental time</T></View><UmbrellaArt width={width < 600 ? 100 : 190} height={width < 600 ? 120 : 160} dark /></View>

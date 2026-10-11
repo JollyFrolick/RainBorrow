@@ -3,7 +3,7 @@ import { canUseStation, DEPOSIT, PRICE_PER_HOUR, priceForDuration, type Rental }
 
 export const MINUTE = 60_000;
 export type RewardConfig = { criticalThreshold: number; lowThreshold: number; criticalMinutes: number; lowMinutes: number; dailyMinutes: number; expiryDays: number; normalFreeMinutes: number; timeZone: string };
-export const REWARD_CONFIG: Readonly<RewardConfig> = Object.freeze({ criticalThreshold: .2, lowThreshold: .4, criticalMinutes: 30, lowMinutes: 15, dailyMinutes: 60, expiryDays: 30, normalFreeMinutes: 24 * 60, timeZone: 'Asia/Hong_Kong' });
+export const REWARD_CONFIG: Readonly<RewardConfig> = Object.freeze({ criticalThreshold: .2, lowThreshold: .4, criticalMinutes: 30, lowMinutes: 15, dailyMinutes: 60, expiryDays: 30, normalFreeMinutes: 12 * 60, timeZone: 'Asia/Hong_Kong' });
 export type RewardCredit = { id: string; rentalId: string; umbrellaId: string; stationId: string; stationName: string; earnedAt: number; expiresAt: number; earnedMinutes: number; remainingMs: number };
 export type RewardEvent = { id: string; kind: 'estimate_shown' | 'return_completed' | 'minutes_earned' | 'minutes_redeemed' | 'stockout_ended' | 'ownership_transferred'; at: number; stationId: string; rentalId?: string; minutes?: number; durationMs?: number };
 export type RewardState = { stations: Station[]; rental: Rental | null; history: Rental[]; credits: RewardCredit[]; rewardEvents: RewardEvent[]; stockoutSince: Record<string, number> };

@@ -4,6 +4,20 @@ export type Rental = { id: string; umbrellaId: string; stationId: string; statio
 export type Mode = 'borrow' | 'return';
 export const PRICE_PER_HOUR = 5;
 export const DEPOSIT = 60;
+export const RENTAL_COOLDOWN_MS = 60 * 60 * 1000;
+export function rentalCooldownEndsAt(history: Rental[], demoBypassRentalId?: string): number {
+  const latest = history.reduce<Rental | undefined>((latest, rental) => {
+    const endedAt = rental.returnedAt ?? rental.ownedAt;
+    const latestEndedAt = latest?.returnedAt ?? latest?.ownedAt;
+    return endedAt !== undefined && (latestEndedAt === undefined || endedAt > latestEndedAt) ? rental : latest;
+  }, undefined);
+  if (!latest || latest.id === demoBypassRentalId) return 0;
+  return (latest.returnedAt ?? latest.ownedAt!) + RENTAL_COOLDOWN_MS;
+}
+export function assertRentalCooldownEnded(history: Rental[], now: number, demoBypassRentalId?: string): void {
+  const remaining = rentalCooldownEndsAt(history, demoBypassRentalId) - now;
+  if (remaining > 0) throw new Error(`You can rent another umbrella in ${Math.ceil(remaining / 60000)} min. There is a 1-hour cooldown after each rental ends.`);
+}
 export function priceForDuration(milliseconds: number): number {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) return 0;
   return Math.min(Math.floor(milliseconds / 3600000) * PRICE_PER_HOUR, DEPOSIT);

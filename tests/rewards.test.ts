@@ -105,35 +105,35 @@ test('24/7 stations earn rewards overnight even with legacy stored hours', () =>
   assert.equal(completeDemoReturn(state({ stations: [legacyStation], rental: { ...rental, startedAt: overnight - 45 * MINUTE } }), rental.id, station.id, overnight).receipt.rewardMinutesEarned, 30);
 });
 
-test('default pricing gives 24 free hours before hourly deposit deductions', () => {
+test('default pricing gives 12 free hours before hourly deposit deductions', () => {
   const start = rental.startedAt;
-  assert.equal(billWithDefaults(rental, [], start + 24 * 60 * MINUTE).amount, 0);
-  assert.equal(billWithDefaults(rental, [], start + 24 * 60 * MINUTE + 1).amount, 0);
-  assert.equal(billWithDefaults(rental, [], start + 25 * 60 * MINUTE + 1).amount, 5);
+  assert.equal(billWithDefaults(rental, [], start + 12 * 60 * MINUTE).amount, 0);
+  assert.equal(billWithDefaults(rental, [], start + 12 * 60 * MINUTE + 1).amount, 0);
+  assert.equal(billWithDefaults(rental, [], start + 13 * 60 * MINUTE + 1).amount, 5);
   assert.equal(completeReturn(state(), rental.id, station.id, now).receipt.amount, 0);
 });
-test('countdown survives reload and rewards extend the initial 24 hours', () => {
+test('countdown survives reload and rewards extend the initial 12 hours', () => {
   const credits = [credit({ expiresAt: now + 7 * 86400000 })];
-  const freeEnd = rental.startedAt + (24 * 60 + 30) * MINUTE;
+  const freeEnd = rental.startedAt + (12 * 60 + 30) * MINUTE;
   assert.equal(freeRentalEndsAt(JSON.parse(JSON.stringify(rental)), credits), freeEnd);
   assert.equal(billWithDefaults(rental, credits, rental.startedAt + 60 * MINUTE).usedMs, 0);
   assert.equal(billWithDefaults(rental, credits, freeEnd).amount, 0);
   assert.equal(billWithDefaults(rental, credits, freeEnd + 1).amount, 0);
-  assert.equal(freeRentalEndsAt(rental, [credit({ expiresAt: rental.startedAt + MINUTE })]), rental.startedAt + 24 * 60 * MINUTE);
+  assert.equal(freeRentalEndsAt(rental, [credit({ expiresAt: rental.startedAt + MINUTE })]), rental.startedAt + 12 * 60 * MINUTE);
 });
 
 test('returns refund unused deposit, including a full refund within free time', () => {
   const free = completeReturn(state(), rental.id, station.id, now);
   assert.equal(free.receipt.depositPaid, 60);
   assert.equal(free.receipt.refundAmount, 60);
-  const paid = completeReturn(state(), rental.id, station.id, rental.startedAt + 27 * 60 * MINUTE);
+  const paid = completeReturn(state(), rental.id, station.id, rental.startedAt + 15 * 60 * MINUTE);
   assert.equal(paid.receipt.amount, 15);
   assert.equal(paid.receipt.refundAmount, 45);
   assert.equal(paid.receipt.status, 'returned');
 });
 test('ownership transfers exactly at deposit depletion, with no inventory or reward issuance', () => {
   const initial = state();
-  const end = rental.startedAt + 36 * 60 * MINUTE;
+  const end = rental.startedAt + 24 * 60 * MINUTE;
   assert.equal(settleDemoOwnership(initial, end - 1), initial);
   const owned = settleDemoOwnership(initial, end);
   assert.equal(owned.rental, null);
@@ -147,7 +147,7 @@ test('ownership transfers exactly at deposit depletion, with no inventory or rew
 });
 test('reload catches up ownership at the original deadline; late returns do not create rewards', () => {
   const initial = JSON.parse(JSON.stringify(state()));
-  const end = rental.startedAt + 36 * 60 * MINUTE;
+  const end = rental.startedAt + 24 * 60 * MINUTE;
   const late = completeReturn(initial, rental.id, station.id, end + 7 * 86400000);
   assert.equal(late.receipt.status, 'owned');
   assert.equal(late.receipt.ownedAt, end);
@@ -158,7 +158,7 @@ test('reload catches up ownership at the original deadline; late returns do not 
 test('reward time delays ownership and is deducted exactly once', () => {
   const credits = [credit({ expiresAt: now + 7 * 86400000 })];
   const initial = state({ credits });
-  const end = rental.startedAt + (36 * 60 + 30) * MINUTE;
+  const end = rental.startedAt + (24 * 60 + 30) * MINUTE;
   assert.equal(settleDemoOwnership(initial, end - 1), initial);
   const owned = settleDemoOwnership(initial, end);
   assert.equal(owned.history[0].rewardMsUsed, 30 * MINUTE);
@@ -167,7 +167,7 @@ test('reward time delays ownership and is deducted exactly once', () => {
 });
 
 test('last hour before ownership still allows a return and HK$5 refund', () => {
-  const result = completeReturn(state(), rental.id, station.id, rental.startedAt + 36 * 60 * MINUTE - 1);
+  const result = completeReturn(state(), rental.id, station.id, rental.startedAt + 24 * 60 * MINUTE - 1);
   assert.equal(result.receipt.status, 'returned');
   assert.equal(result.receipt.amount, 55);
   assert.equal(result.receipt.refundAmount, 5);
